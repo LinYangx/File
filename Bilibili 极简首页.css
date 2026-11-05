@@ -1,0 +1,234 @@
+/* ==UserStyle==
+@name         bilibili 极简首页
+@version      20211230.13.26
+@namespace    userstyles.world/user/souldee
+@description  每次看见首页的一些推荐就没能忍住点进去，非常的容易消磨掉时间，既然如此不过删了个干净。基于以上的原因，只对于首页进行极简化。
+@author       souldee
+@license      No License
+==/UserStyle== */
+
+@-moz-document regexp("https://www.bilibili.com/") {
+/* 整体背景色或者图片 */
+body {
+    height: 100vh;
+    background: #375552;
+    background-size: cover;
+}
+
+/* 整体背景色或者图片 */
+body {
+    height: 100vh;
+    background-color: #375552;                 /* 图片加载前/失败时的底色 */
+    background-image: url("https://dfintl.com/wp-content/uploads/2019/03/Space-nasa-53884-unsplash1300x700.jpg");
+    background-size: cover;                    /* 铺满并等比裁剪 */
+    background-position: center center;        /* 居中 */
+    background-repeat: no-repeat;
+    background-attachment: fixed;              /* 滚动时背景不动 */
+}
+    
+/* header颜色*/
+.bili-header {
+    background: #000000;
+}
+
+
+/* 屏蔽频道，顶部横幅 */
+.bili-header__channel,
+.bili-header__banner {
+    display: none !important;
+}
+
+/* 屏蔽主题的各个模块 */
+main {
+    display: none;
+}
+
+/* 屏蔽页脚 */
+.bili-footer {
+    display: none;
+}
+
+/* 屏蔽右侧浮动按钮 */
+.palette-button-outer {
+    display: none;
+}
+
+.bili-header .bili-header__bar {
+    background: transparent;
+}
+
+/* 屏蔽顶部header左侧按钮 */
+.bili-header__bar .left-entry {
+    display: none;
+}
+
+.bili-header .right-entry {
+    position: fixed !important;
+    right: 24px;
+    top: 8px;
+}
+
+/* 屏蔽大会员，创作中心，投稿 */
+.bili-header__bar .right-entry li:nth-child(2),
+.bili-header__bar .right-entry li:nth-child(7) {
+    display: none;
+}
+
+/* 搜索框容器 */
+.center-search-container {
+    width: 100%;
+    position: fixed;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%); 
+}
+
+/* 搜索框 */
+.bili-header .center-search-container .center-search__bar {
+    max-width: 60%;
+}
+
+/* 搜索按钮 */
+.nav-search-btn {
+    top: 50% !important;
+    right: 8px;
+    transform: translateY(-50%);
+}
+
+/* 搜索框内部容器：用固定高度，去掉上下 padding */
+#nav-searchform {
+    height: 70px !important;              /* 想多高改这里 */
+    padding: 0 48px 0 24px !important;    /* 只留左右，右侧给按钮 */
+    box-sizing: border-box;
+}
+
+/* 中间层：撑满高度 */
+#nav-searchform .nav-search-content {
+    height: 80%;
+    flex: 1;
+}
+
+/* 真正的输入框：撑满，字也一起放大 */
+#nav-searchform .nav-search-input {
+    width: 100%;
+    height: 100% !important;
+    font-size: 15px;
+}
+
+/* 屏蔽 bilibili 热搜（点击搜索框后下拉面板里的热搜部分，保留搜索历史） */
+.search-panel .trending,
+.search-panel .trending-item,
+.nav-search-content .trending {
+    display: none !important;
+}
+
+/* header 容器 */
+#i_cecream {
+    background: transparent !important;
+}
+
+/* 隐藏带 data-v-67aac306 的通用链接组件（Vue 作用域链接） */
+a[data-v-67aac306][href][target] {
+    display: none !important;
+}
+
+/* 隐藏带 data-v-6d02eddf 的通用链接组件（Vue 作用域链接） */
+a[data-v-6d02eddf][href][target] {
+    display: none !important;
+}
+
+/* 隐藏带 data-v-ede673b2 的通用链接组件（Vue 作用域链接） */
+a[data-v-ede673b2][href][target] {
+    display: none !important;
+}
+
+/* 隐藏广告拦截提示条 */
+div.adblock-tips {
+    display: none !important;
+}
+
+/* 隐藏顶栏头像弹层容器 */
+div.header-avatar-wrap__container.mini-avatar--small {
+    display: none !important;
+}
+
+/* 隐藏顶栏频道导航条（新版首页） */
+div.header-channel-fixed.is-zh {
+    display: none !important;
+}
+
+/* 隐藏推荐区滑动卡片组件 */
+div.recommended-swipe {
+    display: none !important;
+}
+
+/* 隐藏上传入口按钮 */
+div.upload-entry__trigger {
+    display: none !important;
+}
+
+/* 隐藏稍后再看画中画按钮 */
+div.watchlater-pip-button__inner {
+    display: none !important;
+}
+
+/* ===== 收藏 / 历史：改为纯图标入口，悬浮于搜索框上方（大小、位置、颜色均可调）===== */
+:root {
+    --entry-icon-size: 80px;               /* 图标按钮边长 */
+    --entry-icon-gap: 24px;                /* 两按钮间距 */
+    --entry-icon-top: calc(40% - 136px);   /* 垂直位置：搜索框中心在 40%，上移量可调 */
+    --entry-icon-color: #ffffff;           /* 图标颜色 */
+}
+
+/* 隐藏文字标签，只留图标 */
+.bili-header__bar a.right-entry__item-trigger[data-header-fav-entry="true"] .trigger-text,
+.bili-header__bar a.right-entry__item-trigger[href*="/history"] .trigger-text {
+    display: none;
+}
+
+/* 从顶栏右侧列表流中抽出，固定悬浮（原位置自动收拢） */
+.bili-header__bar a.right-entry__item-trigger[data-header-fav-entry="true"],
+.bili-header__bar a.right-entry__item-trigger[href*="/history"] {
+    position: fixed;
+    top: var(--entry-icon-top);
+    width: var(--entry-icon-size);
+    height: var(--entry-icon-size);
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    color: var(--entry-icon-color);
+    background: rgba(0, 0, 0, .2);         /* 底色，改 transparent 可全透明 */
+    border-radius: 50%;
+    z-index: 99;
+}
+
+/* 水平方向：以页面中线对称，收藏在左、历史在右 */
+.bili-header__bar a.right-entry__item-trigger[href*="/history"] {
+    left: calc(50% + var(--entry-icon-gap) / 2);
+}
+
+.bili-header__bar a.right-entry__item-trigger[data-header-fav-entry="true"] {
+    left: calc(50% - var(--entry-icon-size) - var(--entry-icon-gap) / 2);
+}
+
+/* 图标随按钮尺寸等比缩放 */
+.bili-header__bar a.right-entry__item-trigger[data-header-fav-entry="true"] .trigger-icon,
+.bili-header__bar a.right-entry__item-trigger[href*="/history"] .trigger-icon {
+    width: calc(var(--entry-icon-size) * 0.5);
+    height: calc(var(--entry-icon-size) * 0.5);
+}
+
+/* 悬浮反馈 */
+.bili-header__bar a.right-entry__item-trigger[data-header-fav-entry="true"]:hover,
+.bili-header__bar a.right-entry__item-trigger[href*="/history"]:hover {
+    background: rgba(255, 255, 255, .15);
+}
+
+/* 隐藏「收藏」「历史」图标入口的悬浮弹层（只留入口按钮，禁止弹出面板） */
+/* 弹层结构：.v-popover-wrap > a.right-entry__item-trigger + .v-popover（默认 display:none，hover 时展开） */
+/* 依赖 :has() 选择器（Chrome 105+），按弹层内部的面板类名精确定位，不影响消息等其他入口的弹层 */
+.bili-header .v-popover:has(.favorite-panel-popover),
+.bili-header .v-popover:has(.history-panel-popover) {
+    display: none !important;
+}
+}
