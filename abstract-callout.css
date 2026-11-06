@@ -1,6 +1,6 @@
 /* 深色模式单独配色 */
 .theme-dark {
-  --abstract-collapsed-title-color: #444444;
+  --abstract-collapsed-title-color: #333333;
   --abstract-collapsed-bg-color: #000000;
 }
 
@@ -18,7 +18,17 @@
   color: var(--abstract-collapsed-title-color);
 }
 
-/* 折叠时隐藏图标 */
-.callout[data-callout="abstract"].is-collapsed .callout-icon {
-  display: none;
+/* 折叠态左侧色条 */
+body {
+  --abstract-collapsed-bar-color: color-mix(in srgb, #8A5CF5 70%, black);
+}
+
+.callout[data-callout="abstract"].is-collapsed .callout-title::before {
+  content: "";
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 5px;
+  height: 1.5em;
+  margin-right: 0.4em;
+  background: var(--abstract-collapsed-bar-color);
 }
