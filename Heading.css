@@ -22,6 +22,8 @@ body {
   --h1-text-level: 90%;
   --h2-text-level: 90%;
   --h3-text-level: 0%;
+  /* H3 上下边距：一个数值同时控制标题上方和下方的间距 */
+  --h3-margin-y: 0.5em;
 }
 
 /* H1 方块 - 编辑模式 / 实时预览 */
@@ -40,6 +42,11 @@ body {
   color: color-mix(in srgb, var(--h2-text-base) var(--h2-text-level), black);
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
+}
+
+/* H3 上下边距 - 编辑模式 / 实时预览 */
+.theme-dark .cm-line.HyperMD-header-3 {
+  margin-block: var(--h3-margin-y);
 }
 
 /* H3 方块 - 编辑模式 / 实时预览 */
@@ -73,6 +80,7 @@ body {
   width: fit-content;
   padding: 0em 0.1em;
   color: color-mix(in srgb, var(--h3-text-base) var(--h3-text-level), black);
+  margin-block: var(--h3-margin-y);
 }
 
 /* 暗色模式下 H1、H2、H3 有方块后，去掉左侧色条（想保留色条就删掉这段） */
