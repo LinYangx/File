@@ -1,0 +1,19 @@
+/* 深色模式单独配色 */
+.theme-dark {
+  --abstract-collapsed-title-color: #444444;
+  --abstract-collapsed-bg-color: #000000;
+}
+
+/* 折叠状态的底块颜色 */
+.callout[data-callout="abstract"].is-collapsed {
+  background-color: var(--abstract-collapsed-bg-color);
+}
+
+/* 折叠状态的标题、图标和箭头颜色 */
+.callout[data-callout="abstract"].is-collapsed :is(
+  .callout-title-inner,
+  .callout-icon,
+  .callout-fold
+) {
+  color: var(--abstract-collapsed-title-color);
+}
