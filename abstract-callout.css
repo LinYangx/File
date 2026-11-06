@@ -17,3 +17,8 @@
 ) {
   color: var(--abstract-collapsed-title-color);
 }
+
+/* 折叠时隐藏图标 */
+.callout[data-callout="abstract"].is-collapsed .callout-icon {
+  display: none;
+}
