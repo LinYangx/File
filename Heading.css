@@ -1,0 +1,80 @@
+/* 每级标题的色条颜色,按喜好改 */
+body {
+  --hbar-1: color-mix(in srgb, #8A5CF5 70%, black);
+  --hbar-2: #e5484d;
+  --hbar-3: #e5b800;
+  --hbar-4: #30a46c;
+  --hbar-5: #0091ff;
+  --hbar-6: hsl(214, 100%, 47%);
+}
+
+/* H1 设置（暗色模式） */
+.theme-dark {
+  /* 方块底色：80% 控制亮度，数值越小越暗 */
+  --h1-block-bg: color-mix(in srgb, #8A5CF5 60%, black);
+  /* 文字基准色：想沿用主题自带的 H1 颜色可改成 var(--h1-color) */
+  --h1-text-base: var(--text-normal);
+  /* 文字亮度：100% = 原色，数值越小越暗 */
+  --h1-text-level: 90%;
+}
+
+/* H1 方块 - 编辑模式 / 实时预览：背景加在文字 span 上，只包住文字 */
+.theme-dark .cm-line.HyperMD-header-1 .cm-header-1 {
+  background: var(--h1-block-bg);
+  padding: 0em 0.15em;
+  color: color-mix(in srgb, var(--h1-text-base) var(--h1-text-level), black);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone; /* 标题换行时每行都保持完整方块 */
+}
+
+/* H1 方块 - 阅读模式：h1 缩成内容宽度 */
+.theme-dark .markdown-rendered h1 {
+  background: var(--h1-block-bg);
+  width: fit-content;
+  padding: 0em 0.1em;
+  color: color-mix(in srgb, var(--h1-text-base) var(--h1-text-level), black);
+}
+
+/* 暗色模式下 H1 有方块后，去掉左侧色条（想保留色条就删掉这段） */
+.theme-dark .cm-line.HyperMD-header-1::before,
+.theme-dark .markdown-rendered h1::before {
+  display: none;
+}
+
+/* 色条的通用样式(编辑模式/实时预览 + 阅读模式) */
+.cm-line[class*="HyperMD-header-"]::before,
+.markdown-rendered :is(h1,h2,h3,h4,h5,h6)::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 1em;
+  margin-right: 0.4em;
+  vertical-align: -0.1em;
+  background: var(--hbar-color);
+}
+
+/* 编辑模式 / 实时预览 */
+.cm-line.HyperMD-header-1 { --hbar-color: var(--hbar-1); }
+.cm-line.HyperMD-header-2 { --hbar-color: var(--hbar-2); }
+.cm-line.HyperMD-header-3 { --hbar-color: var(--hbar-3); }
+.cm-line.HyperMD-header-4 { --hbar-color: var(--hbar-4); }
+.cm-line.HyperMD-header-5 { --hbar-color: var(--hbar-5); }
+.cm-line.HyperMD-header-6 { --hbar-color: var(--hbar-6); }
+
+/* 阅读模式 */
+.markdown-rendered h1 { --hbar-color: var(--hbar-1); }
+.markdown-rendered h2 { --hbar-color: var(--hbar-2); }
+.markdown-rendered h3 { --hbar-color: var(--hbar-3); }
+.markdown-rendered h4 { --hbar-color: var(--hbar-4); }
+.markdown-rendered h5 { --hbar-color: var(--hbar-5); }
+.markdown-rendered h6 { --hbar-color: var(--hbar-6); }
+
+/* 隐藏标题折叠箭头 */
+.cm-fold-indicator,
+.markdown-reading-view .collapse-indicator {
+  opacity: 0;
+}
+.cm-fold-indicator:hover,
+.markdown-reading-view .collapse-indicator:hover {
+  opacity: 1;
+}
