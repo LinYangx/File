@@ -1,4 +1,4 @@
-/* 每级标题的色条颜色,按喜好改 */
+/* 每级标题的色条颜色 */
 body {
   --hbar-1: #e5484d;
   --hbar-2: color-mix(in srgb, #8A5CF5 70%, black);
@@ -12,8 +12,8 @@ body {
 .theme-dark {
   /* 方块底色：60% 控制亮度，数值越小越暗 */
   --h1-block-bg: color-mix(in srgb, #e5484d 60%, black);
-  --h2-block-bg: color-mix(in srgb, #8A5CF5 60%, black);
-  --h3-block-bg: color-mix(in srgb, #e5b800 60%, black);
+  --h2-block-bg: color-mix(in srgb, #8A5CF5 67%, black);
+  --h3-block-bg: color-mix(in srgb, #e5b800 67%, black);
   /* 文字基准色：想沿用主题自带的标题颜色可改成 var(--h1-color) / var(--h2-color) / var(--h3-color) */
   --h1-text-base: var(--text-normal);
   --h2-text-base: var(--text-normal);
@@ -21,13 +21,13 @@ body {
   /* 文字亮度：100% = 原色，数值越小越暗 */
   --h1-text-level: 90%;
   --h2-text-level: 90%;
-  --h3-text-level: 90%;
+  --h3-text-level: 0%;
 }
 
-/* H1 方块 - 编辑模式 / 实时预览：背景加在文字 span 上，只包住文字 */
+/* H1 方块 - 编辑模式 / 实时预览 */
 .theme-dark .cm-line.HyperMD-header-1 .cm-header-1 {
   background: var(--h1-block-bg);
-  padding: 0em 0.15em;
+  padding: 0em 0.1em;
   color: color-mix(in srgb, var(--h1-text-base) var(--h1-text-level), black);
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone; /* 标题换行时每行都保持完整方块 */
@@ -36,7 +36,7 @@ body {
 /* H2 方块 - 编辑模式 / 实时预览 */
 .theme-dark .cm-line.HyperMD-header-2 .cm-header-2 {
   background: var(--h2-block-bg);
-  padding: 0em 0.15em;
+  padding: 0em 0.1em;
   color: color-mix(in srgb, var(--h2-text-base) var(--h2-text-level), black);
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
@@ -45,7 +45,7 @@ body {
 /* H3 方块 - 编辑模式 / 实时预览 */
 .theme-dark .cm-line.HyperMD-header-3 .cm-header-3 {
   background: var(--h3-block-bg);
-  padding: 0em 0.15em;
+  padding: 0em 0.1em;
   color: color-mix(in srgb, var(--h3-text-base) var(--h3-text-level), black);
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
