@@ -1,33 +1,45 @@
-/* Ã¿¼¶±êÌâµÄÉ«ÌõÑÕÉ«,°´Ï²ºÃ¸Ä */
+/* æ¯çº§æ ‡é¢˜çš„è‰²æ¡é¢œè‰²,æŒ‰å–œå¥½æ”¹ */
 body {
-  --hbar-1: color-mix(in srgb, #8A5CF5 70%, black);
-  --hbar-2: #e5484d;
+  --hbar-1: #e5484d;
+  --hbar-2: color-mix(in srgb, #8A5CF5 70%, black);
   --hbar-3: #e5b800;
   --hbar-4: #30a46c;
   --hbar-5: #0091ff;
   --hbar-6: hsl(214, 100%, 47%);
 }
 
-/* H1 ÉèÖÃ£¨°µÉ«Ä£Ê½£© */
+/* H1ã€H2 è®¾ç½®ï¼ˆæš—è‰²æ¨¡å¼ï¼‰ï¼šä¸¤è€…é¢œè‰²å·²å¯¹è°ƒ */
 .theme-dark {
-  /* ·½¿éµ×É«£º80% ¿ØÖÆÁÁ¶È£¬ÊıÖµÔ½Ğ¡Ô½°µ */
-  --h1-block-bg: color-mix(in srgb, #8A5CF5 60%, black);
-  /* ÎÄ×Ö»ù×¼É«£ºÏëÑØÓÃÖ÷Ìâ×Ô´øµÄ H1 ÑÕÉ«¿É¸Ä³É var(--h1-color) */
+  /* æ–¹å—åº•è‰²ï¼š60% æ§åˆ¶äº®åº¦ï¼Œæ•°å€¼è¶Šå°è¶Šæš— */
+  --h1-block-bg: color-mix(in srgb, #e5484d 60%, black);
+  --h2-block-bg: color-mix(in srgb, #8A5CF5 60%, black);
+  /* æ–‡å­—åŸºå‡†è‰²ï¼šæƒ³æ²¿ç”¨ä¸»é¢˜è‡ªå¸¦çš„æ ‡é¢˜é¢œè‰²å¯æ”¹æˆ var(--h1-color) / var(--h2-color) */
   --h1-text-base: var(--text-normal);
-  /* ÎÄ×ÖÁÁ¶È£º100% = Ô­É«£¬ÊıÖµÔ½Ğ¡Ô½°µ */
+  --h2-text-base: var(--text-normal);
+  /* æ–‡å­—äº®åº¦ï¼š100% = åŸè‰²ï¼Œæ•°å€¼è¶Šå°è¶Šæš— */
   --h1-text-level: 90%;
+  --h2-text-level: 90%;
 }
 
-/* H1 ·½¿é - ±à¼­Ä£Ê½ / ÊµÊ±Ô¤ÀÀ£º±³¾°¼ÓÔÚÎÄ×Ö span ÉÏ£¬Ö»°ü×¡ÎÄ×Ö */
+/* H1 æ–¹å— - ç¼–è¾‘æ¨¡å¼ / å®æ—¶é¢„è§ˆï¼šèƒŒæ™¯åŠ åœ¨æ–‡å­— span ä¸Šï¼ŒåªåŒ…ä½æ–‡å­— */
 .theme-dark .cm-line.HyperMD-header-1 .cm-header-1 {
   background: var(--h1-block-bg);
   padding: 0em 0.15em;
   color: color-mix(in srgb, var(--h1-text-base) var(--h1-text-level), black);
   -webkit-box-decoration-break: clone;
-  box-decoration-break: clone; /* ±êÌâ»»ĞĞÊ±Ã¿ĞĞ¶¼±£³ÖÍêÕû·½¿é */
+  box-decoration-break: clone; /* æ ‡é¢˜æ¢è¡Œæ—¶æ¯è¡Œéƒ½ä¿æŒå®Œæ•´æ–¹å— */
 }
 
-/* H1 ·½¿é - ÔÄ¶ÁÄ£Ê½£ºh1 Ëõ³ÉÄÚÈİ¿í¶È */
+/* H2 æ–¹å— - ç¼–è¾‘æ¨¡å¼ / å®æ—¶é¢„è§ˆ */
+.theme-dark .cm-line.HyperMD-header-2 .cm-header-2 {
+  background: var(--h2-block-bg);
+  padding: 0em 0.15em;
+  color: color-mix(in srgb, var(--h2-text-base) var(--h2-text-level), black);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* H1 æ–¹å— - é˜…è¯»æ¨¡å¼ï¼šh1 ç¼©æˆå†…å®¹å®½åº¦ */
 .theme-dark .markdown-rendered h1 {
   background: var(--h1-block-bg);
   width: fit-content;
@@ -35,13 +47,23 @@ body {
   color: color-mix(in srgb, var(--h1-text-base) var(--h1-text-level), black);
 }
 
-/* °µÉ«Ä£Ê½ÏÂ H1 ÓĞ·½¿éºó£¬È¥µô×ó²àÉ«Ìõ£¨Ïë±£ÁôÉ«Ìõ¾ÍÉ¾µôÕâ¶Î£© */
+/* H2 æ–¹å— - é˜…è¯»æ¨¡å¼ï¼šh2 ç¼©æˆå†…å®¹å®½åº¦ */
+.theme-dark .markdown-rendered h2 {
+  background: var(--h2-block-bg);
+  width: fit-content;
+  padding: 0em 0.1em;
+  color: color-mix(in srgb, var(--h2-text-base) var(--h2-text-level), black);
+}
+
+/* æš—è‰²æ¨¡å¼ä¸‹ H1ã€H2 æœ‰æ–¹å—åï¼Œå»æ‰å·¦ä¾§è‰²æ¡ï¼ˆæƒ³ä¿ç•™è‰²æ¡å°±åˆ æ‰è¿™æ®µï¼‰ */
 .theme-dark .cm-line.HyperMD-header-1::before,
-.theme-dark .markdown-rendered h1::before {
+.theme-dark .cm-line.HyperMD-header-2::before,
+.theme-dark .markdown-rendered h1::before,
+.theme-dark .markdown-rendered h2::before {
   display: none;
 }
 
-/* É«ÌõµÄÍ¨ÓÃÑùÊ½(±à¼­Ä£Ê½/ÊµÊ±Ô¤ÀÀ + ÔÄ¶ÁÄ£Ê½) */
+/* è‰²æ¡çš„é€šç”¨æ ·å¼(ç¼–è¾‘æ¨¡å¼/å®æ—¶é¢„è§ˆ + é˜…è¯»æ¨¡å¼) */
 .cm-line[class*="HyperMD-header-"]::before,
 .markdown-rendered :is(h1,h2,h3,h4,h5,h6)::before {
   content: "";
@@ -53,7 +75,7 @@ body {
   background: var(--hbar-color);
 }
 
-/* ±à¼­Ä£Ê½ / ÊµÊ±Ô¤ÀÀ */
+/* ç¼–è¾‘æ¨¡å¼ / å®æ—¶é¢„è§ˆ */
 .cm-line.HyperMD-header-1 { --hbar-color: var(--hbar-1); }
 .cm-line.HyperMD-header-2 { --hbar-color: var(--hbar-2); }
 .cm-line.HyperMD-header-3 { --hbar-color: var(--hbar-3); }
@@ -61,7 +83,7 @@ body {
 .cm-line.HyperMD-header-5 { --hbar-color: var(--hbar-5); }
 .cm-line.HyperMD-header-6 { --hbar-color: var(--hbar-6); }
 
-/* ÔÄ¶ÁÄ£Ê½ */
+/* é˜…è¯»æ¨¡å¼ */
 .markdown-rendered h1 { --hbar-color: var(--hbar-1); }
 .markdown-rendered h2 { --hbar-color: var(--hbar-2); }
 .markdown-rendered h3 { --hbar-color: var(--hbar-3); }
@@ -69,7 +91,7 @@ body {
 .markdown-rendered h5 { --hbar-color: var(--hbar-5); }
 .markdown-rendered h6 { --hbar-color: var(--hbar-6); }
 
-/* Òş²Ø±êÌâÕÛµş¼ıÍ· */
+/* éšè—æ ‡é¢˜æŠ˜å ç®­å¤´ */
 .cm-fold-indicator,
 .markdown-reading-view .collapse-indicator {
   opacity: 0;
