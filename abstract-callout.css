@@ -1,4 +1,4 @@
-/* 深色模式单独配色 */
+/* 深色模式单独覆盖 */
 .theme-dark {
   --abstract-collapsed-title-color: #333333;
   --abstract-collapsed-bg-color: #000000;
