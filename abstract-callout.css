@@ -1,6 +1,6 @@
-/* 深色模式单独覆盖 */
+/* 深色模式单独配色 */
 .theme-dark {
-  --abstract-collapsed-title-color: #333333;
+  --abstract-collapsed-title-color: #666666;
   --abstract-collapsed-bg-color: #000000;
 }
 
@@ -16,6 +16,11 @@
   .callout-fold
 ) {
   color: var(--abstract-collapsed-title-color);
+}
+
+/* 折叠时隐藏图标 */
+.callout[data-callout="abstract"].is-collapsed .callout-icon {
+  display: none;
 }
 
 /* 折叠态左侧色条 */
