@@ -1,0 +1,43 @@
+/* =============== info =============== */
+
+/* 深色模式配色 */
+.theme-dark {
+  --info-title-color: #666666;
+  --info-bg-color: #000000;
+}
+
+body {
+  --info-bar-color: var(--h2-block-bg);
+}
+
+/* 底块颜色 */
+.callout[data-callout="info"] {
+  background-color: var(--info-bg-color);
+}
+
+/* 标题、图标和折叠箭头颜色 */
+.callout[data-callout="info"] :is(
+  .callout-title-inner,
+  .callout-icon,
+  .callout-fold
+) {
+  color: var(--info-title-color);
+}
+
+/* 隐藏图标 */
+.callout[data-callout="info"] .callout-icon {
+  display: none;
+}
+
+/* 标题左侧色条 */
+.callout[data-callout="info"] .callout-title::before {
+  content: "";
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 6px;
+  height: 1.6em;
+  margin-right: 0.05em;
+  background: var(--info-bar-color);
+  /* 向上衔接标题 */
+  box-shadow: 0 -4px 0 0 var(--info-bar-color);
+}
