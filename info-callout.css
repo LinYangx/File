@@ -1,45 +1,45 @@
-/* =============== Abstract =============== */
+/* =============== info =============== */
 /* 深色模式单独配色 */
 .theme-dark {
-  --abstract-collapsed-title-color: #666666;
-  --abstract-collapsed-bg-color: #000000;
+  --info-collapsed-title-color: #666666;
+  --info-collapsed-bg-color: #000000;
 }
 
 /* 折叠状态的底块颜色 */
-.callout[data-callout="abstract"].is-collapsed {
-  background-color: var(--abstract-collapsed-bg-color);
+.callout[data-callout="info"].is-collapsed {
+  background-color: var(--info-collapsed-bg-color);
 }
 
 /* 折叠状态的标题、图标和箭头颜色 */
-.callout[data-callout="abstract"].is-collapsed :is(
+.callout[data-callout="info"].is-collapsed :is(
   .callout-title-inner,
   .callout-icon,
   .callout-fold
 ) {
-  color: var(--abstract-collapsed-title-color);
+  color: var(--info-collapsed-title-color);
 }
 
 /* 折叠时隐藏图标 */
-.callout[data-callout="abstract"].is-collapsed .callout-icon {
+.callout[data-callout="info"].is-collapsed .callout-icon {
   display: none;
 }
 
 /* 折叠态左侧色条 */
 body {
-  --abstract-collapsed-bar-color: var(--h2-block-bg);
+  --info-collapsed-bar-color: var(--h2-block-bg);
 }
 
-.callout[data-callout="abstract"].is-collapsed .callout-title::before {
+.callout[data-callout="info"].is-collapsed .callout-title::before {
   content: "";
   display: inline-block;
   flex: 0 0 auto;
   width: 6px;
   height: 1.6em;
   margin-right: 0.05em;
-  background: var(--abstract-collapsed-bar-color);
+  background: var(--info-collapsed-bar-color);
 }
 
 /* 左侧色条向上衔接标题 */
-.callout[data-callout="abstract"].is-collapsed .callout-title::before {
-  box-shadow: 0 -4px 0 0 var(--abstract-collapsed-bar-color);
+.callout[data-callout="info"].is-collapsed .callout-title::before {
+  box-shadow: 0 -4px 0 0 var(--info-collapsed-bar-color);
 }
