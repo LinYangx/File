@@ -1,0 +1,357 @@
+/* ==UserStyle==
+@name       知乎-极简首页
+@version      20261110
+@namespace    https://github.com/Hojondo/projects-userstyles-world-userstyle
+@description  极简首页
+@author      LinYang
+@license      No License
+==/UserStyle== */
+
+.Sticky.AppHeader.is-fixed {
+        top: -45px !important;
+        -moz-transition: top 200ms ease-out 500ms;
+        -webkit-transition: top 200ms ease-out 500ms;
+        transition: top 200ms ease-out 500ms;
+    }
+
+    .Sticky.AppHeader:hover {
+        top: 0 !important;
+        -moz-transition-delay: 0s;
+        -webkit-transition-delay: 0s;
+        transition-delay: 0s;
+    }
+
+    @supports ((-webkit-backdrop-filter:blur(20px)) or (backdrop-filter:blur(20px))) {
+        .Sticky.AppHeader:hover {
+            -webkit-filter: none;
+            filter: none
+        }
+    }
+
+    .GlobalSideBar-categoryList,
+    .GlobalSideBar-navList,
+    .Question-sideColumn {
+        display: none !important;
+    }
+
+    .TopstoryMain,
+    .Topstory-mainColumn,
+    .Question-main > div:first-child {
+        width: 100%;
+        min-height: 100vh;
+    }
+
+    .Topstory > *:first-child:not(.Topstory-container),
+    .Topstory-mainColumn > *:first-child:not(.Topstory-mainColumnCard) {
+        display: none;
+    }
+
+    .Topstory-container {
+        width: unset;
+    }
+
+    .Topstory-container section.HotItem:nth-child(odd) {
+        background: #D65C5C;
+    }
+
+    .Topstory-container .RichContent-cover,
+    .Topstory-container .HotItem-img,
+    .Topstory-container .HotItem-label,
+    .Topstory-container .HotItem-metrics,
+    .Topstory-container .TopstoryItem--advertCard {
+        display: none;
+    }
+
+    .Topstory-container .HotItem-metrics--bottom {
+        bottom: 0;
+    }
+
+    .Topstory-mainColumn + * {
+        display: none;
+    }
+
+    .Search-container #SearchMain {
+        width: 100%;
+    }
+
+    .Search-container #SearchMain + div {
+        display: none;
+    }
+
+    .Footer {
+        display: none;
+    }
+
+
+    /* -- */
+    .Question-mainColumn {
+        width: 100%;
+    }
+
+    .AppHeader.is-hidden {
+        display: none;
+    }
+
+    .Reward {
+        display: none;
+    }
+
+    .AuthorInfo {
+        max-width: unset;
+    }
+
+    .RichContent-inner {
+        max-height: 70vh;
+        overflow-y: auto !important;
+        /*     background: #C7EDCC55; */
+        background: #181a1b;
+    }
+
+    .RichContent-inner img {
+        width: 50px !important;
+        margin-left: 0 !important;
+    }
+
+    .RichContent-inner p {
+        margin: 0.4em 0;
+    }
+
+    .RichContent-inner b {
+        color: #D65C5C;
+    }
+
+    .RichContent-inner div:has(> img) + figcaption {
+        margin-top: 0;
+        text-align: left;
+        padding: 0;
+    }
+
+    .RichContent-inner .GifPlayer img {
+        width: unset;
+        margin-left: inherit !important;
+    }
+
+    .ztext-empty-paragraph {
+        display: none;
+    }
+
+    .List-item + .Pc-word,
+    .List-item + .Pc-word-new {
+        display: none;
+    }
+
+    /* -- comment part -- */
+    .Modal-content img.Avatar {
+        display: none !important;
+    }
+
+    .Modal-content > div > div > div > div[data-id]:nth-child(odd) {
+        background: #222222;
+    }
+
+    span[data-focus-scope-start] + div > div:last-child {
+        width: var(--app-width);
+    }
+
+    .ContentItem-meta > :not(:first-child) {
+        display: none;
+    }
+
+/* ==================== 顶部导航栏 ==================== */
+/* 创作 */
+.SearchBar-askContainer {
+  display: none !important;
+}
+
+/* “消息、私信、创作中心”整个区域 */
+div:has(> .Popover > button[href="https://www.zhihu.com/notifications"]):has(> a[href="https://www.zhihu.com/creator"]) {
+  display: none !important;
+}
+
+/* 提问大标题里的广告 */
+.QuestionHeader-main .Card{
+	display: none !important;
+}
+
+/* 关注 */
+div:has(> span.app-header-badge) {
+  display: none !important;
+}
+
+/* 左上角导航 */
+.AppHeader nav a{
+	display: none !important;
+}
+
+/* 但是第一个a标签（关注）要显示 */
+.AppHeader nav a:first-child{
+	display: flex !important;
+}
+
+/* 搜索框拉满 */
+.SearchBar-input{
+	margin-left: 0 !important;
+	max-width: unset !important;
+}
+
+/* 搜索框里的热搜隐藏 */
+.SearchBar-input input::placeholder{
+	opacity: 0 !important;
+}
+
+/* 知乎直答 */
+.SearchBar > a{
+	display: none !important;
+}
+
+/* 新建问题的左侧加一点外边距 */
+.SearchBar-askContainer{
+	margin-left: 25px !important;
+}
+
+/* 修复知乎header向右溢出的问题（不是为什么要我来给B乎擦前端的屁股？ */
+.AppHeader{
+	min-width: unset !important;
+}
+
+/* 点击搜索框后看到的热搜 */
+.SearchBar-menu .AutoComplete-group:first-child{
+	display: none !important;
+}
+
+/* 内容详情页的右侧搜索框和页脚 */
+.Question-sideColumn{
+	display: none !important;
+}
+
+/* 赞同 */
+button.VoteButton[aria-label^="赞同"] {
+  display: none !important;
+}
+
+/* 反对 */
+button.VoteButton--down[aria-label="反对"] {
+  display: none !important;
+}
+
+/* 喜欢 */
+button.ContentItem-action[aria-label="喜欢"] {
+  display: none !important;
+}
+
+/* 分享及其菜单容器 */
+div.Popover.ShareMenu.ContentItem-action {
+  display: none !important;
+}
+
+/* 将"收起"移动到"评论"左侧 */
+.TopstoryItem .ContentItem-actions
+> button.ContentItem-rightButton[data-zop-retract-question="true"] {
+  order: -1;                  /* 排到操作栏其他按钮之前 */
+  margin-left: 0 !important;  /* 取消原本靠右排列的自动外边距 */
+  margin-right: 0;          /* 与“评论”按钮的间距 */
+}
+
+/* ==================== 贴文紧凑排版 ==================== */
+:root {
+  --feed-font-size: 16px;        /* 正文字号 */
+  --feed-line-height: 1.35;      /* 正文行高 */
+  --feed-title-line-height: 0.5;   /* 标题行高 */
+  --feed-title-gap: 4px;         /* 标题与正文之间的距离 */
+  --feed-paragraph-gap: 2px;     /* 段落之间的距离 */
+  --feed-actions-gap: 4px;       /* 正文与底部操作栏之间的距离 */
+}
+
+/* 压缩标题占用空间 */
+.TopstoryItem .ContentItem-title {
+  line-height: var(--feed-title-line-height) !important;
+  margin-bottom: var(--feed-title-gap) !important;
+}
+
+/* 压缩正文行距 */
+.TopstoryItem .RichText {
+  font-size: var(--feed-font-size);
+  line-height: var(--feed-line-height) !important;
+}
+
+/* 压缩正文段落间距 */
+.TopstoryItem .RichText p {
+  margin-top: 0 !important;
+  margin-bottom: var(--feed-paragraph-gap) !important;
+}
+
+.TopstoryItem .RichText p:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* 压缩底部操作栏间距 */
+.TopstoryItem .ContentItem-actions {
+  margin-top: var(--feed-actions-gap) !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* ==================== 贴文分割线 ==================== */
+:root {
+  --post-divider-thickness: 4px;    /* 线条粗细 */
+  --post-divider-style: solid;      /* solid 实线、dashed 虚线、dotted 点线、double 双线 */
+  --post-divider-color: #555555;    /* 线条颜色 */
+  --post-divider-gap: 20px;         /* 分割线两侧的间距 */
+  --post-divider-length: 98.2%;      /* 分割线长度，例如 90% */
+}
+
+/* 为每条贴文建立定位容器 */
+.TopstoryItem {
+  position: relative;
+}
+
+/* 设置贴文之间的留白，最后一条不添加 */
+.TopstoryItem:not(:last-child) {
+  padding-bottom: var(--post-divider-gap);
+  margin-bottom: var(--post-divider-gap);
+}
+
+/* 绘制分割线 */
+.TopstoryItem:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: var(--post-divider-length);
+  transform: translateX(-50%);
+  border-bottom:
+    var(--post-divider-thickness)
+    var(--post-divider-style)
+    var(--post-divider-color);
+}
+/* ==================== "阅读全文"按钮位置==================== */
+:root {
+  --read-more-space: 92px; /* 为“阅读全文”预留的宽度 */
+}
+
+/* 建立定位容器 */
+.TopstoryItem .ContentItem {
+  position: relative;
+}
+
+/* 有“阅读全文”按钮时，将底部操作栏向右移 */
+.TopstoryItem .ContentItem:has(.ContentItem-more) .ContentItem-actions {
+  box-sizing: border-box;
+  padding-left: var(--read-more-space) !important;
+}
+
+/* 将“阅读全文”视觉上移动到操作栏最左侧 */
+.TopstoryItem .ContentItem-more {
+  position: absolute;
+  left: -4px;
+  bottom: -4px;
+  z-index: 10;
+
+  height: 32px;
+  margin: 0 !important;
+  padding: 0 4px;
+
+  display: inline-flex !important;
+  align-items: center;
+  white-space: nowrap;
+}
