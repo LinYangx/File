@@ -1,0 +1,97 @@
+/* ==UserStyle==
+@name         bilibili 极简首页
+@version      20211230.13.26
+@namespace    userstyles.world/user/souldee
+@description  每次看见首页的一些推荐就没能忍住点进去，非常的容易消磨掉时间，既然如此不过删了个干净。基于以上的原因，只对于首页进行极简化。
+@author       souldee
+@license      No License
+==/UserStyle== */
+
+@-moz-document regexp("https://www.bilibili.com/") {
+/* 整体背景色或者图片 */
+body {
+    height: 100vh;
+    background: #375552;;
+    background-size: cover;
+}
+
+
+/* header颜色 */
+.bili-header {
+    background:rgba(0, 0, 0, .2);
+}
+
+
+/* 屏蔽频道，顶部横幅 */
+.bili-header__channel,
+.bili-header__banner {
+    display: none !important;
+}
+
+/* 屏蔽主题的各个模块 */
+main {
+    display: none;
+}
+
+/* 屏蔽页脚 */
+.bili-footer {
+    display: none;
+}
+
+/* 屏蔽右侧浮动按钮 */
+.palette-button-outer {
+    display: none;
+}
+
+.bili-header .bili-header__bar {
+    background: transparent;
+}
+
+/* 屏蔽顶部header左侧按钮 */
+.bili-header__bar .left-entry {
+    display: none;
+}
+
+.bili-header .right-entry {
+    position: fixed !important;
+    right: 24px;
+    top: 8px;
+}
+
+/* 屏蔽大会员，创作中心，投稿 */
+.bili-header__bar .right-entry li:nth-child(2),
+.bili-header__bar .right-entry li:nth-child(7) {
+    display: none;
+}
+
+/* 搜索框容器 */
+.center-search-container {
+    width: 100%;
+    position: fixed;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%); 
+}
+
+/* 搜索框 */
+.bili-header .center-search-container .center-search__bar {
+    max-width: 60%;
+}
+
+/* 搜索框内部容器 */
+#nav-searchform {
+    padding: 24px 48px 24px 24px !important;
+}
+
+/* 搜索按钮 */
+.nav-search-btn {
+    top: 50% !important;
+    right: 8px;
+    transform: translateY(-50%);
+}
+
+/* header 容器 */
+#i_cecream {
+    background: transparent !important;
+}
+}
