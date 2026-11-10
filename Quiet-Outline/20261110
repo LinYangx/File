@@ -1,0 +1,32 @@
+@charset "UTF-8";
+/* ==================== 箭头间距与层级缩进 ==================== */
+.quiet-outline {
+    /* 箭头区域与标题文字的间距 */
+    --qo-arrow-text-gap: 3px;   /* 增大则文字右移 */
+
+    /* 每深入一级增加的缩进 */
+    --qo-level-indent: 7px;   /* 插件原值约为17px */
+
+    /* 标题颜色 */
+    --h1-color: hsla(360, 70%, 60%, 0.85);   /* 红 */
+    --h2-color: hsla(260, 88%, 66%, 0.85);   /* 紫 */
+    --h3-color: hsla(50, 80%, 50%, 0.7);   /* 黄 */
+    --h4-color: hsla(150, 50%, 50%, 0.75);   /* 绿 */
+    --h5-color: #444444;
+    --h6-color: hsla(200, 70%, 50%, 0.85);   /* 蓝 */
+}
+
+/* 调节箭头与其后标题内容的间距 */
+.quiet-outline .n-tree .n-tree-node-content {
+    padding-left: var(--qo-arrow-text-gap) !important;
+}
+
+/* 调节相邻上下层级之间的缩进差距 */
+.quiet-outline .n-tree .n-tree-node-indent {
+    width: var(--qo-level-indent) !important;
+}
+
+/* 让彩虹层级线跟随新的缩进宽度保持居中 */
+.quiet-outline .n-tree .n-tree-node-indent::after {
+    right: calc(var(--qo-level-indent) / 2);
+}
