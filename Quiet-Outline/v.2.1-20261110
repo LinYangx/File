@@ -1,0 +1,252 @@
+/* =========================================================
+   Quiet Outline：左侧箭头网格与叶子行连接线
+   ========================================================= */
+
+.quiet-outline {
+    /* 网格与箭头 */
+    --qo-grid-size: 18.5px;
+    --qo-grid-line: 0px;
+    --qo-grid-fill-strength: 100%;
+    --qo-arrow-size: 14px;
+    --qo-arrow-color: #000;
+
+    /* 标题布局 */
+    --qo-arrow-text-gap: 6px;
+    --qo-level-indent: 7px;
+    --custom-line-gap: 0px;
+
+    /* 无子标题的行 */
+    --qo-leaf-fill: #000;
+    --qo-leaf-line-width: 4.5px;
+
+    /* 标题层级颜色 */
+    --h1-color: hsla(360, 70%, 60%, 0.85);
+    --h2-color: hsla(260, 88%, 66%, 0.85);
+    --h3-color: hsla(50, 80%, 50%, 0.70);
+    --h4-color: hsla(150, 50%, 50%, 0.75);
+    --h5-color: #444444;
+    --h6-color: hsla(200, 70%, 50%, 0.85);
+}
+
+/* =========================================================
+   1. 层级颜色
+   ========================================================= */
+
+.quiet-outline .n-tree-node.level-1 {
+    --qo-grid-color: var(--h1-color);
+}
+
+.quiet-outline .n-tree-node.level-2 {
+    --qo-grid-color: var(--h2-color);
+}
+
+.quiet-outline .n-tree-node.level-3 {
+    --qo-grid-color: var(--h3-color);
+}
+
+.quiet-outline .n-tree-node.level-4 {
+    --qo-grid-color: var(--h4-color);
+}
+
+.quiet-outline .n-tree-node.level-5 {
+    --qo-grid-color: var(--h5-color);
+}
+
+.quiet-outline .n-tree-node.level-6 {
+    --qo-grid-color: var(--h6-color);
+}
+
+/* =========================================================
+   2. 树布局与层级缩进
+   ========================================================= */
+
+.quiet-outline .n-tree {
+    padding-inline: 0 !important;
+}
+
+.quiet-outline .n-tree .n-tree-node-wrapper {
+    padding: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.quiet-outline .n-tree .n-tree-node {
+    position: relative;
+}
+
+.quiet-outline .n-tree .n-tree-node-indent {
+    width: var(--qo-level-indent) !important;
+}
+
+.quiet-outline .n-tree .n-tree-node-indent::after {
+    right: calc(var(--qo-level-indent) / 2);
+}
+
+.quiet-outline .n-tree .n-tree-node .n-tree-node-content {
+    min-height: var(--qo-grid-size) !important;
+    padding-left: var(--qo-arrow-text-gap) !important;
+}
+
+/* =========================================================
+   3. 固定正方形箭头单元格
+   ========================================================= */
+
+.quiet-outline .n-tree .n-tree-node > .n-tree-node-switcher {
+    /* 视觉上移到所有缩进之前 */
+    order: -1;
+
+    box-sizing: border-box;
+    flex: 0 0 var(--qo-grid-size) !important;
+    width: var(--qo-grid-size) !important;
+    min-width: var(--qo-grid-size) !important;
+    max-width: var(--qo-grid-size) !important;
+    height: var(--qo-grid-size) !important;
+    min-height: var(--qo-grid-size) !important;
+    max-height: var(--qo-grid-size) !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+
+    /* 右侧为标题分割线，底部为相邻单元格分割线 */
+    border-style: solid;
+    border-color: var(--qo-grid-color, var(--text-muted));
+    border-width:
+        0
+        var(--qo-grid-line)
+        var(--qo-grid-line)
+        var(--qo-grid-line);
+
+    background-color: transparent;
+    background-color: color-mix(
+        in srgb,
+        var(--qo-grid-color, var(--text-muted))
+            var(--qo-grid-fill-strength),
+        transparent
+    );
+
+    /* 阻止 Naive UI 旋转整个单元格 */
+    transform: none !important;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease;
+}
+
+/* 补齐第一行顶部边框 */
+.quiet-outline
+    .n-tree
+    > .n-tree-node-wrapper:first-child
+    > .n-tree-node
+    > .n-tree-node-switcher {
+    border-top-width: var(--qo-grid-line);
+}
+
+/* =========================================================
+   4. 箭头颜色、尺寸与旋转
+   ========================================================= */
+
+.quiet-outline
+    .n-tree-node
+    > .n-tree-node-switcher
+    > .n-tree-node-switcher__icon {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+
+    width: 100% !important;
+    height: 100% !important;
+
+    color: var(
+        --qo-arrow-color,
+        var(--qo-grid-color, var(--text-normal))
+    ) !important;
+
+    transform: none !important;
+}
+
+/* 覆盖 Icon 组件写入的内联 font-size */
+.quiet-outline .n-tree-node-switcher__icon .xicon {
+    box-sizing: border-box;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+
+    width: var(--qo-arrow-size) !important;
+    height: var(--qo-arrow-size) !important;
+    font-size: var(--qo-arrow-size) !important;
+    line-height: 1 !important;
+}
+
+.quiet-outline .n-tree-node-switcher__icon .xicon svg {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+
+    transform: none;
+    transform-origin: 50% 50% !important;
+    transition: transform 0.15s ease;
+}
+
+/* 展开时只旋转 SVG，不改变单元格 */
+.quiet-outline
+    .n-tree-node-switcher--expanded
+    .n-tree-node-switcher__icon
+    .xicon
+    svg {
+    transform: rotate(90deg) !important;
+}
+
+/* =========================================================
+   5. 无子标题的行：居中连续竖线
+   ========================================================= */
+
+/* 保留单元格占位，但隐藏箭头和外框 */
+.quiet-outline
+    .n-tree
+    .n-tree-node
+    > .n-tree-node-switcher--hide {
+    visibility: visible !important;
+    cursor: default;
+    background-color: var(--qo-leaf-fill, transparent) !important;
+    border-color: transparent !important;
+}
+
+.quiet-outline
+    .n-tree-node-switcher--hide
+    .n-tree-node-switcher__icon {
+    visibility: hidden !important;
+}
+
+/*
+   竖线绘制在完整标题行上，避免受固定单元格高度影响。
+   上下延伸一个网格线宽度，覆盖相邻行接缝。
+*/
+.quiet-outline
+    .n-tree
+    .n-tree-node:has(> .n-tree-node-switcher--hide)::before {
+    content: "";
+    position: absolute;
+    z-index: 1;
+
+    top: calc(-1 * var(--qo-grid-line));
+    bottom: calc(-1 * var(--qo-grid-line));
+    left: calc(var(--qo-grid-size) / 2);
+
+    width: var(--qo-leaf-line-width);
+    background-color: var(
+        --qo-leaf-line-color,
+        var(--qo-grid-color, var(--text-muted))
+    );
+
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+/* =========================================================
+   6. 减少动画
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .quiet-outline .n-tree-node-switcher__icon .xicon svg {
+        transition: none;
+    }
+}
