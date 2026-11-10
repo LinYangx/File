@@ -1,0 +1,160 @@
+/* ==================== Quiet Outline:方格箭头列 ====================
+   - 所有层级的箭头固定在最左侧,排成一列正方形网格
+   - 竖线隔开箭头与标题,横线隔开相邻格子
+   - 格子边线 / 填充跟随 --h1-color ~ --h6-color
+   - 叶子标题也保留空格子,网格不断开
+   - 展开只旋转箭头图标,格子尺寸与位置不变
+   适配:Quiet Outline(Naive UI 2.43 的 n-tree 结构)
+   ================================================================== */
+
+.quiet-outline {
+    /* ---------- 原有设置 ---------- */
+
+    /* 竖分割线与标题文字的间距 */
+    --qo-arrow-text-gap: 3px;   /* 增大则文字右移 */
+
+    /* 每深入一级增加的标题缩进(箭头不再缩进,只有标题文字缩进) */
+    --qo-level-indent: 7px;   /* 插件原值约为17px */
+
+    /* 标题颜色 */
+    --h1-color: hsla(360, 70%, 60%, 0.85);   /* 红 */
+    --h2-color: hsla(260, 88%, 66%, 0.85);   /* 紫 */
+    --h3-color: hsla(50, 80%, 50%, 0.7);   /* 黄 */
+    --h4-color: hsla(150, 50%, 50%, 0.75);   /* 绿 */
+    --h5-color: #444444;
+    --h6-color: hsla(200, 70%, 50%, 0.85);   /* 蓝 */
+
+    /* ---------- 方格网格 ---------- */
+
+    /* 正方形边长(同时也是每一行的固定高度) */
+    --qo-cell: 20px;
+
+    /* 网格线条粗细 */
+    --qo-line-width: 0px;
+
+    /* 箭头图标颜色 */
+    --qo-arrow-color: #000;
+
+    /* 格子填充 = 层级色 × 该比例 + 下面的底色;比例越大越接近层级色 */
+    --qo-fill-mix: 100%;
+    --qo-fill-base: #000;
+
+    /* 想把填充 / 外缘线条改成纯黑:取消下面对应行的注释。
+       纯黑填充时请同时把 --qo-arrow-color 改成浅色,否则箭头看不见 */
+    /* --qo-fill: #000; */
+    /* --qo-line: #000; */
+}
+
+/* 想让网格贴住侧边栏最左边缘:取消注释(会同时去掉功能栏的左侧留白) */
+/* .view-content:has(.quiet-outline) { padding-left: 0; } */
+
+
+/* ==================== 各层级取色 ==================== */
+.quiet-outline .n-tree-node.level-1 { --qo-c: var(--h1-color); }
+.quiet-outline .n-tree-node.level-2 { --qo-c: var(--h2-color); }
+.quiet-outline .n-tree-node.level-3 { --qo-c: var(--h3-color); }
+.quiet-outline .n-tree-node.level-4 { --qo-c: var(--h4-color); }
+.quiet-outline .n-tree-node.level-5 { --qo-c: var(--h5-color); }
+.quiet-outline .n-tree-node.level-6 { --qo-c: var(--h6-color); }
+
+
+/* ==================== 行:固定高度,取消行间距 ==================== */
+/* 行间不留缝,网格才连续(会让插件的"行间距"设置失效) */
+.quiet-outline .n-tree .n-tree-node-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.quiet-outline .n-tree .n-tree-node {
+    height: var(--qo-cell);
+    min-height: var(--qo-cell);
+    align-items: flex-start;
+}
+
+/* 标题单行显示,保证每行高度恒等于格子边长 */
+.quiet-outline .n-tree .n-tree-node .n-tree-node-content {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
+    padding-left: var(--qo-arrow-text-gap) !important;
+}
+.quiet-outline .n-tree .n-tree-node .n-tree-node-content__text,
+.quiet-outline .n-tree .n-tree-node .n-tree-node-content p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* ==================== 格子本体 ==================== */
+.quiet-outline .n-tree .n-tree-node .n-tree-node-switcher {
+    /* 移到最左侧:不受前面缩进块影响,所有层级对齐在同一列 */
+    order: -1;
+
+    /* 正方形;!important 用来压过行内 width 和插件设的 height:0 */
+    box-sizing: border-box;
+    flex: 0 0 var(--qo-cell);
+    width: var(--qo-cell) !important;
+    height: var(--qo-cell) !important;
+    align-self: flex-start;
+
+    /* 叶子节点原本 visibility:hidden,这里改回可见,让网格保持连续 */
+    visibility: visible !important;
+
+    /* 展开时 Naive UI 会把整个 switcher 旋转 90°,这里禁掉,改为只转图标 */
+    transform: none !important;
+
+    /* 填充:层级色混合底色;线条:层级色 */
+    background: var(
+        --qo-fill,
+        color-mix(in srgb, var(--qo-c) var(--qo-fill-mix), var(--qo-fill-base))
+    );
+    border-style: solid;
+    border-color: var(--qo-line, var(--qo-c));
+    /* 上 右 下 左:右=箭头与标题的竖分割线,下=格子之间的横线,左=外缘 */
+    border-width: 0 var(--qo-line-width) var(--qo-line-width) var(--qo-line-width);
+    border-radius: 0;
+}
+
+/* 第一行补上顶部外缘线 */
+.quiet-outline .n-tree > .n-tree-node-wrapper:first-child .n-tree-node-switcher {
+    border-top-width: var(--qo-line-width);
+}
+
+/* 叶子格子:保留格子,隐藏图标;点击穿透到整行,行为与原来一致(跳转到标题) */
+.quiet-outline .n-tree .n-tree-node-switcher--hide {
+    pointer-events: none;
+    cursor: default;
+}
+.quiet-outline .n-tree .n-tree-node-switcher--hide .n-tree-node-switcher__icon {
+    visibility: hidden;
+}
+
+
+/* ==================== 箭头图标:颜色与旋转 ==================== */
+.quiet-outline .n-tree .n-tree-node-switcher__icon,
+.quiet-outline .n-tree .n-tree-node-switcher__icon * {
+    color: var(--qo-arrow-color) !important;
+}
+
+.quiet-outline .n-tree .n-tree-node-switcher__icon {
+    transform: rotate(0deg);
+    transition: transform 0.15s ease;
+}
+
+.quiet-outline .n-tree .n-tree-node-switcher--expanded .n-tree-node-switcher__icon {
+    transform: rotate(90deg);
+}
+
+
+/* ==================== 原有:标题缩进 ==================== */
+/* 调节相邻上下层级之间的缩进差距 */
+.quiet-outline .n-tree .n-tree-node-indent {
+    width: var(--qo-level-indent) !important;
+}
+
+/* 让彩虹层级线跟随新的缩进宽度保持居中 */
+.quiet-outline .n-tree .n-tree-node-indent::after {
+    right: calc(var(--qo-level-indent) / 2);
+}
