@@ -1,0 +1,327 @@
+/* =========================================================
+   Quiet Outline：固定在最左侧的箭头网格
+   ========================================================= */
+
+.quiet-outline {
+    /* ---------- 网格尺寸与线条 ---------- */
+    --qo-grid-size: 18.5px;          /* 正方形单元格边长 */
+    --qo-grid-line: 0px;           /* 网格线宽度 */
+    --qo-grid-fill-strength: 100%;  /* 填充色浓度,(100%即为完整层级色) */
+    --qo-arrow-size: 14px;         /* 箭头图标尺寸 */
+
+    /* ---------- 箭头与标题 ---------- */
+    --qo-arrow-text-gap: 6px;      /* 竖向分割线与大标题文字的间距 */
+    --qo-level-indent: 7px;        /* 每深入一级增加的缩进 */
+
+    /* 箭头颜色 */
+    --qo-arrow-color: #000;
+
+    /* 无子标题的叶子格 */
+    --qo-leaf-fill: #000;
+
+    /* 叶子格边框颜色 */
+    --qo-leaf-border: #000;
+
+    /* 网格连续显示，不保留额外行间距 */
+    --custom-line-gap: 0px;
+
+    /* ---------- 标题层级颜色 ---------- */
+    --h1-color: hsla(360, 70%, 60%, 0.85);
+    --h2-color: hsla(260, 88%, 66%, 0.85);
+    --h3-color: hsla(50, 80%, 50%, 0.70);
+    --h4-color: hsla(150, 50%, 50%, 0.75);
+    --h5-color: #444444;
+    --h6-color: hsla(200, 70%, 50%, 0.85);
+}
+
+/* =========================================================
+   一、为每个层级建立统一的网格颜色变量
+   ========================================================= */
+
+.quiet-outline .n-tree-node.level-1 {
+    --qo-grid-color: var(--h1-color);
+}
+
+.quiet-outline .n-tree-node.level-2 {
+    --qo-grid-color: var(--h2-color);
+}
+
+.quiet-outline .n-tree-node.level-3 {
+    --qo-grid-color: var(--h3-color);
+}
+
+.quiet-outline .n-tree-node.level-4 {
+    --qo-grid-color: var(--h4-color);
+}
+
+.quiet-outline .n-tree-node.level-5 {
+    --qo-grid-color: var(--h5-color);
+}
+
+.quiet-outline .n-tree-node.level-6 {
+    --qo-grid-color: var(--h6-color);
+}
+
+/* =========================================================
+   二、消除网格间隙，让箭头列贴近大纲最左侧
+   ========================================================= */
+
+.quiet-outline .n-tree {
+    padding-inline: 0 !important;
+}
+
+.quiet-outline .n-tree .n-tree-node-wrapper {
+    padding: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+/* 保留原有层级缩进 */
+.quiet-outline .n-tree .n-tree-node-indent {
+    width: var(--qo-level-indent) !important;
+}
+
+/* 彩虹层级线跟随新的缩进宽度保持居中 */
+.quiet-outline .n-tree .n-tree-node-indent::after {
+    right: calc(var(--qo-level-indent) / 2);
+}
+
+/* =========================================================
+   三、固定正方形箭头单元格
+   ========================================================= */
+
+.quiet-outline .n-tree .n-tree-node > .n-tree-node-switcher {
+    /* DOM 中开关位于缩进之后；视觉上移到所有缩进之前 */
+    order: -1;
+
+    box-sizing: border-box;
+    flex: 0 0 var(--qo-grid-size) !important;
+    width: var(--qo-grid-size) !important;
+    min-width: var(--qo-grid-size) !important;
+    max-width: var(--qo-grid-size) !important;
+    height: var(--qo-grid-size) !important;
+    min-height: var(--qo-grid-size) !important;
+    max-height: var(--qo-grid-size) !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+
+    /*
+       右边框：箭头与标题之间的竖向分割线
+       下边框：相邻箭头格之间的横向分割线
+       左边框：箭头列外缘
+    */
+    border-style: solid;
+    border-color: var(--qo-grid-color, var(--text-muted));
+    border-width:
+        0
+        var(--qo-grid-line)
+        var(--qo-grid-line)
+        var(--qo-grid-line);
+
+    /* 填充使用对应层级颜色的浅色版本 */
+    background-color: transparent;
+    background-color: color-mix(
+        in srgb,
+        var(--qo-grid-color, var(--text-muted))
+            var(--qo-grid-fill-strength),
+        transparent
+    );
+
+    /* 阻止 Naive UI 展开时旋转整个单元格 */
+    transform: none !important;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease;
+}
+
+/* 为第一行补上顶部外框；其余行共用上一行的下边框 */
+.quiet-outline
+    .n-tree
+    > .n-tree-node-wrapper:first-child
+    > .n-tree-node
+    > .n-tree-node-switcher {
+    border-top-width: var(--qo-grid-line);
+}
+
+/* 标题与单元格等高，但不影响标题文字自身换行 */
+.quiet-outline .n-tree .n-tree-node .n-tree-node-content {
+    min-height: var(--qo-grid-size) !important;
+    padding-left: var(--qo-arrow-text-gap) !important;
+}
+
+/* =========================================================
+   四、箭头颜色、尺寸及展开旋转（修正版）
+   ========================================================= */
+
+/* 图标容器：覆盖 Naive UI 默认箭头颜色 */
+.quiet-outline
+    .n-tree
+    .n-tree-node
+    > .n-tree-node-switcher
+    > .n-tree-node-switcher__icon {
+    width: 100% !important;
+    height: 100% !important;
+
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+
+    color: var(
+        --qo-arrow-color,
+        var(--qo-grid-color, var(--text-normal))
+    ) !important;
+
+    transform: none !important;
+}
+
+/*
+   Quiet Outline 实际使用 span.xicon 包装 SVG。
+   size="12px" 会在这里形成内联 font-size，必须用 !important 覆盖。
+*/
+.quiet-outline
+    .n-tree-node-switcher__icon
+    .xicon {
+    box-sizing: border-box;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+
+    width: var(--qo-arrow-size) !important;
+    height: var(--qo-arrow-size) !important;
+    font-size: var(--qo-arrow-size) !important;
+    line-height: 1 !important;
+}
+
+/* 只设置 SVG 的尺寸和旋转，不改变外层网格 */
+.quiet-outline
+    .n-tree-node-switcher__icon
+    .xicon
+    svg {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+
+    transform: none;
+    transform-origin: 50% 50% !important;
+    transition: transform 0.15s ease;
+}
+
+/* 展开时仅旋转内部 SVG */
+.quiet-outline
+    .n-tree-node-switcher--expanded
+    .n-tree-node-switcher__icon
+    .xicon
+    svg {
+    transform: rotate(90deg) !important;
+}
+
+/* 系统要求减少动画时，关闭旋转过渡 */
+@media (prefers-reduced-motion: reduce) {
+    .quiet-outline
+        .n-tree-node-switcher__icon
+        .xicon
+        svg {
+        transition: none;
+    }
+}
+
+/* =========================================================
+   无子标题行：使用居中层级的竖线连接
+   ========================================================= */
+
+.quiet-outline {
+    /* 竖线粗细 */
+    --qo-leaf-line-width: 4.5px;
+}
+
+/* 为居中竖线提供定位基准 */
+.quiet-outline .n-tree .n-tree-node > .n-tree-node-switcher {
+    position: relative;
+}
+
+/*
+   保留叶子格原有尺寸和位置，但隐藏外框。
+   填充仍可通过 --qo-leaf-fill 设置为 #000 或 transparent。
+*/
+.quiet-outline
+    .n-tree
+    .n-tree-node
+    > .n-tree-node-switcher--hide {
+    visibility: visible !important;
+    cursor: default;
+
+    background-color: var(--qo-leaf-fill, transparent) !important;
+    border-color: transparent !important;
+}
+
+/* 不显示叶子行原来的箭头图标 */
+.quiet-outline
+    .n-tree-node-switcher--hide
+    .n-tree-node-switcher__icon {
+    visibility: hidden !important;
+}
+
+/* 在叶子格中央绘制贯穿上下边缘的竖线 */
+.quiet-outline
+    .n-tree
+    .n-tree-node
+    > .n-tree-node-switcher--hide::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+
+    width: var(--qo-leaf-line-width);
+    background-color: var(
+        --qo-leaf-line-color,
+        var(--qo-grid-color, var(--text-muted))
+    );
+
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+/* =========================================================
+   修复叶子行竖线断点：改为覆盖整个标题行
+   ========================================================= */
+
+/* 停用上一版绘制在箭头格内部的竖线 */
+.quiet-outline
+    .n-tree
+    .n-tree-node
+    > .n-tree-node-switcher--hide::before {
+    content: none !important;
+}
+
+/* 确保定位覆盖完整行高 */
+.quiet-outline .n-tree .n-tree-node {
+    position: relative;
+}
+
+/*
+   在叶子行整体绘制竖线：
+   1. 不再受 24px 箭头格高度限制；
+   2. 上下负延伸覆盖透明边框及相邻行接缝。
+*/
+.quiet-outline
+    .n-tree
+    .n-tree-node:has(> .n-tree-node-switcher--hide)::before {
+    content: "";
+    position: absolute;
+    z-index: 1;
+
+    top: calc(-1 * var(--qo-grid-line));
+    bottom: calc(-1 * var(--qo-grid-line));
+    left: calc(var(--qo-grid-size) / 2);
+
+    width: var(--qo-leaf-line-width);
+    background-color: var(
+        --qo-leaf-line-color,
+        var(--qo-grid-color, var(--text-muted))
+    );
+
+    transform: translateX(-50%);
+    pointer-events: none;
+}
