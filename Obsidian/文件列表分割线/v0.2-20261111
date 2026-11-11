@@ -1,0 +1,37 @@
+.workspace-leaf-content[data-type="file-explorer"] {
+  --folder-divider-color: hsla(258, 88%, 66%, 0.9);       /* 线条颜色 */
+  --folder-divider-thickness: 2px;         /* 线条粗细 */
+  --folder-divider-style: solid;
+  --folder-divider-space-y: 3px;           /* 上下间距 */
+  --folder-divider-inset-x: -3px;           /* 左右间距 */
+}
+
+/* ==================== 上方 ==================== */
+.workspace-leaf-content[data-type="file-explorer"]
+.nav-folder:is(
+  :has(> .nav-folder-title[data-path=""]),
+  :has(> .nav-folder-title[data-path=""])
+)::before,
+
+/* ==================== 下方 ==================== */
+.workspace-leaf-content[data-type="file-explorer"]
+.nav-folder:is(
+  :has(> .nav-folder-title[data-path="Clippings"]),
+  :has(> .nav-folder-title[data-path="附件"])
+)::after {
+  content: "";
+  display: block;
+  box-sizing: border-box;
+  height: 0;
+
+  margin: var(--folder-divider-space-y)
+          var(--folder-divider-inset-x);
+
+  border: 0;
+  border-top: var(--folder-divider-thickness)
+              var(--folder-divider-style)
+              var(--folder-divider-color);
+
+  opacity: var(--folder-divider-opacity);
+  pointer-events: none;
+}
