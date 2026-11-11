@@ -1,0 +1,245 @@
+/* ==================== 全局变量区 ==================== */
+.quiet-outline {
+    /* 网格 */
+    --qo-grid-size: 17.5px;                 /* 大小 */
+    --qo-grid-line: 0px;                   /* 线条粗细 */
+    --qo-grid-fill-strength: 100%;    /* 填充色浓度 */
+
+    /* 箭头 */
+    --qo-arrow-size: 15px;              /* 大小 */
+    --qo-arrow-color: #000;            /* 颜色 */
+
+    /* 标题 */
+    --qo-arrow-text-gap: 3px;        /* 标题与箭头间距 */
+    --qo-level-indent: 11px;            /* 标题间缩进 */
+    --custom-line-gap: 0px;
+
+    /* 无子标题的行 */
+    --qo-leaf-fill: #000;
+    --qo-leaf-line-width: 4.5px;
+
+/* ==================== 标题颜色 ==================== */
+    --h1-color: hsla(360, 70%, 60%, 0.85);
+    --h2-color: hsla(260, 88%, 66%, 0.85);
+    --h3-color: hsla(50, 80%, 50%, 0.70);
+    --h4-color: hsla(150, 50%, 50%, 0.75);
+    --h5-color: #666;
+    --h6-color: hsla(200, 70%, 50%, 0.85);
+}
+
+/* ==================== 顶部层级切换器 ==================== */
+.quiet-outline .n-slider {
+    --qo-level-slider-thickness: 8px;      /* 色带粗细 */
+
+    /* 五段彩色轨道 */
+    --qo-level-slider-track: linear-gradient(
+        to right,
+        var(--h1-color) 0% 20%,
+        var(--h2-color) 20% 40%,
+        var(--h3-color) 40% 60%,
+        var(--h4-color) 60% 80%,
+        var(--h5-color) 80% 100%
+    );
+
+    /* 覆盖Naive UI写入的内联变量 */
+    --n-rail-height: var(--qo-level-slider-thickness) !important;
+    --n-handle-size: 10px !important;           /* 滑块大小 */
+    --n-handle-color: #fff !important;         /* 滑块颜色 */
+
+    /* 滑块外缘及交互状态 */
+    --n-handle-box-shadow: 0 0 0 0px rgb(0 0 0 / 35%) !important;
+    --n-handle-box-shadow-hover: 0 0 0 0px rgb(255 255 255 / 18%) !important;
+    --n-handle-box-shadow-focus: 0 0 0 0px rgb(255 255 255 / 22%) !important;
+    --n-handle-box-shadow-active: 0 0 0 0px rgb(255 255 255 / 22%) !important;
+}
+
+    /* 方角滑块 */
+.quiet-outline .n-slider .n-slider-handle {
+    border-radius: 0 !important;
+}
+
+/* 隐藏标题数量提示 */
+.n-slider-handle-indicator {
+    display: none !important;
+}
+
+
+/* 彩色轨道: 直接覆盖高度,避免内联样式导致粗细失效 */
+.quiet-outline .n-slider .n-slider-rail {
+    height: var(--qo-level-slider-thickness) !important;
+    background: var(--qo-level-slider-track) !important;
+    border-radius: 0px;
+}
+
+/* 隐藏默认单色填充,避免遮住彩色轨道 */
+.quiet-outline .n-slider .n-slider-rail__fill {
+    display: none !important;
+}
+
+/* 隐藏圆点刻度,保留逐级切换功能 */
+.quiet-outline .n-slider .n-slider-dots {
+    display: none !important;
+}
+
+/* ==================== 【配置】层级颜色 ==================== */
+.quiet-outline .n-tree-node.level-1 {
+    --qo-grid-color: var(--h1-color);
+}
+
+.quiet-outline .n-tree-node.level-2 {
+    --qo-grid-color: var(--h2-color);
+}
+
+.quiet-outline .n-tree-node.level-3 {
+    --qo-grid-color: var(--h3-color);
+}
+
+.quiet-outline .n-tree-node.level-4 {
+    --qo-grid-color: var(--h4-color);
+}
+
+.quiet-outline .n-tree-node.level-5 {
+    --qo-grid-color: var(--h5-color);
+}
+
+.quiet-outline .n-tree-node.level-6 {
+    --qo-grid-color: var(--h6-color);
+}
+
+/* ==================== 【配置】树布局与层级缩进 ==================== */
+
+.quiet-outline .n-tree {
+    padding-inline: 0 !important;
+}
+
+.quiet-outline .n-tree .n-tree-node-wrapper {
+    padding: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.quiet-outline .n-tree .n-tree-node {
+    position: relative;
+}
+
+.quiet-outline .n-tree .n-tree-node-indent {
+    width: var(--qo-level-indent) !important;
+}
+
+.quiet-outline .n-tree .n-tree-node-indent::after {
+    right: calc(var(--qo-level-indent) / 2);
+}
+
+.quiet-outline .n-tree .n-tree-node .n-tree-node-content {
+    min-height: var(--qo-grid-size) !important;
+    padding-left: var(--qo-arrow-text-gap) !important;
+}
+
+/* ==================== 【配置】箭头颜色、尺寸、旋转 ==================== */
+.quiet-outline
+    .n-tree-node
+    > .n-tree-node-switcher
+    > .n-tree-node-switcher__icon {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+
+    width: 100% !important;
+    height: 100% !important;
+
+    color: var(
+        --qo-arrow-color,
+        var(--qo-grid-color, var(--text-normal))
+    ) !important;
+
+    transform: none !important;
+}
+
+/* 覆盖Icon组件写入的内联font-size */
+.quiet-outline .n-tree-node-switcher__icon .xicon {
+    box-sizing: border-box;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+
+    width: var(--qo-arrow-size) !important;
+    height: var(--qo-arrow-size) !important;
+    font-size: var(--qo-arrow-size) !important;
+    line-height: 1 !important;
+}
+
+.quiet-outline .n-tree-node-switcher__icon .xicon svg {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+
+    transform: none;
+    transform-origin: 50% 50% !important;
+    transition: transform 0.15s ease;
+}
+
+/* 展开时只旋转SVG,不改变单元格 */
+.quiet-outline
+    .n-tree-node-switcher--expanded
+    .n-tree-node-switcher__icon
+    .xicon
+    svg {
+    transform: rotate(90deg) !important;
+}
+
+/* ==================== 固定正方形箭头单元格 ==================== */
+.quiet-outline .n-tree .n-tree-node > .n-tree-node-switcher {
+    /* 视觉上移到所有缩进之前 */
+    order: -1;
+
+    box-sizing: border-box;
+    flex: 0 0 var(--qo-grid-size) !important;
+    width: var(--qo-grid-size) !important;
+    min-width: var(--qo-grid-size) !important;
+    max-width: var(--qo-grid-size) !important;
+    height: var(--qo-grid-size) !important;
+    min-height: var(--qo-grid-size) !important;
+    max-height: var(--qo-grid-size) !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+
+    /* 右侧为标题分割线，底部为相邻单元格分割线 */
+    border-style: solid;
+    border-color: var(--qo-grid-color, var(--text-muted));
+    border-width:
+        0
+        var(--qo-grid-line)
+        var(--qo-grid-line)
+        var(--qo-grid-line);
+
+    background-color: transparent;
+    background-color: color-mix(
+        in srgb,
+        var(--qo-grid-color, var(--text-muted))
+            var(--qo-grid-fill-strength),
+        transparent
+    );
+
+    /* 阻止 Naive UI 旋转整个单元格 */
+    transform: none !important;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease;
+}
+
+/* 补齐第一行顶部边框 */
+.quiet-outline
+    .n-tree
+    > .n-tree-node-wrapper:first-child
+    > .n-tree-node
+    > .n-tree-node-switcher {
+    border-top-width: var(--qo-grid-line);
+}
+
+/* ==================== 减少动画 ==================== */
+@media (prefers-reduced-motion: reduce) {
+    .quiet-outline .n-tree-node-switcher__icon .xicon svg {
+        transition: none;
+    }
+}
