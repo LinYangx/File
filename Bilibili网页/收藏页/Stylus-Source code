@@ -244,7 +244,7 @@ regexp("https://space.bilibili.com/\\d+/favlist\\?fid=\\d+.*") {
   }
 }
 @-moz-document regexp("https://space.bilibili.com/\\d+/favlist\\?fid=pugvfav") {
-  /* ====== 用户收藏页面内容区 课程收藏夹 ====== */
+  /* ===== 用户收藏页面内容区 课程收藏夹 ====== */
   /* 课程列表. grid布局 */
   #page-fav .fav-main .fav-pugv-list {
     display: grid;
