@@ -1,0 +1,196 @@
+@charset "UTF-8";
+/* ==================== 色条 ==================== */
+/* 每级标题的色条颜色 */
+body {
+  --hbar-1: hsla(360, 80%, 60%, 0.85);   /* 红 */
+  --hbar-2: hsla(260, 88%, 66%, 0.85);   /* 紫 */
+  --hbar-3: hsla(50, 100%, 50%, 0.85);   /* 黄 */
+  --hbar-4: hsla(150, 50%, 50%, 0.85);   /* 绿 */
+  --hbar-5: hsla(150, 50%, 50%, 0.85);   /* 绿 */
+  --hbar-6: hsla(200, 100%, 50%, 0.85);   /* 蓝 */
+}
+
+/* 色条的通用样式(实时预览 + 阅读模式) */
+.cm-line[class*="HyperMD-header-"]::before,
+.markdown-rendered :is(h1,h2,h3,h4,h5,h6)::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 1em;
+  margin-right: 4px;
+  vertical-align: -0.1em;
+  background: var(--hbar-color);
+}
+
+/* ==================== 色块 ==================== */
+/* H1、H2、H3 设置（暗色模式） */
+.theme-dark {
+  /* 方块底色：60% 控制亮度，数值越小越暗 */
+  --h1-block-bg: hsla(360, 80%, 60%, 0.7);
+  --h2-block-bg: hsla(260, 88%, 66%, 0.8);
+  --h3-block-bg: hsla(50, 100%, 50%, 0.65);
+  --h4-block-bg: hsla(150, 50%, 50%, 0.7);
+  /* 文字基准色：想沿用主题自带的标题颜色可改成 var(--h1-color) / var(--h2-color) / var(--h3-color) */
+  --h1-text-base: var(--text-normal);
+  --h2-text-base: var(--text-normal);
+  --h3-text-base: var(--text-normal);
+  --h4-text-base: var(--text-normal);
+  /* 文字亮度：100% = 原色，数值越小越暗 */
+  --h1-text-level: 90%;
+  --h2-text-level: 0%;
+  --h3-text-level: 0%;
+  --h4-text-level: 0%;
+}
+
+/* H1 方块(实时预览) */
+.theme-dark .cm-line.HyperMD-header-1 .cm-header-1 {
+  background: var(--h1-block-bg);
+  padding: 0em 0.1em;
+  color: color-mix(in srgb, var(--h1-text-base) var(--h1-text-level), black);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone; /* 标题换行时每行都保持完整方块 */
+}
+
+/* H2 方块(实时预览) */
+.theme-dark .cm-line.HyperMD-header-2 .cm-header-2 {
+  background: var(--h2-block-bg);
+  padding: 0em 0.1em;
+  color: color-mix(in srgb, var(--h2-text-base) var(--h2-text-level), black);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* H3 方块(实时预览) */
+.theme-dark .cm-line.HyperMD-header-3 .cm-header-3 {
+  background: var(--h3-block-bg);
+  padding: 0em 0.1em;
+  color: color-mix(in srgb, var(--h3-text-base) var(--h3-text-level), black);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* H3 方块(实时预览) */
+.theme-dark .cm-line.HyperMD-header-4 .cm-header-4 {
+  background: var(--h4-block-bg);
+  padding: 0em 0.1em;
+  color: color-mix(in srgb, var(--h4-text-base) var(--h4-text-level), black);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* H1 方块(阅读模式) */
+.theme-dark .markdown-rendered h1 {
+  background: var(--h1-block-bg);
+  width: fit-content;
+  padding: 0em 0.1em;
+  color: color-mix(in srgb, var(--h1-text-base) var(--h1-text-level), black);
+}
+
+/* H2 方块(阅读模式) */
+.theme-dark .markdown-rendered h2 {
+  background: var(--h2-block-bg);
+  width: fit-content;
+  padding: 0em 0.1em;
+  color: color-mix(in srgb, var(--h2-text-base) var(--h2-text-level), black);
+}
+
+/* H3 方块(阅读模式) */
+.theme-dark .markdown-rendered h3 {
+  background: var(--h3-block-bg);
+  width: fit-content;
+  padding: 0em 0.1em;
+  color: color-mix(in srgb, var(--h3-text-base) var(--h3-text-level), black);
+  margin-block: var(--h3-margin-y);
+}
+
+/* 暗色模式下 H1、H2、H3 有方块后，去掉左侧色条（想保留色条就删掉这段） */
+.theme-dark .cm-line.HyperMD-header-1::before,
+.theme-dark .cm-line.HyperMD-header-2::before,
+.theme-dark .cm-line.HyperMD-header-3::before,
+.theme-dark .cm-line.HyperMD-header-4::before,
+.theme-dark .markdown-rendered h1::before,
+.theme-dark .markdown-rendered h2::before,
+.theme-dark .markdown-rendered h3::before,
+.theme-dark .markdown-rendered h4::before {
+  display: none;
+}
+
+/* 实时预览 */
+.cm-line.HyperMD-header-1 { --hbar-color: var(--hbar-1); }
+.cm-line.HyperMD-header-2 { --hbar-color: var(--hbar-2); }
+.cm-line.HyperMD-header-3 { --hbar-color: var(--hbar-3); }
+.cm-line.HyperMD-header-4 { --hbar-color: var(--hbar-4); }
+.cm-line.HyperMD-header-5 { --hbar-color: var(--hbar-5); }
+.cm-line.HyperMD-header-6 { --hbar-color: var(--hbar-6); }
+
+/* 阅读模式 */
+.markdown-rendered h1 { --hbar-color: var(--hbar-1); }
+.markdown-rendered h2 { --hbar-color: var(--hbar-2); }
+.markdown-rendered h3 { --hbar-color: var(--hbar-3); }
+.markdown-rendered h4 { --hbar-color: var(--hbar-4); }
+.markdown-rendered h5 { --hbar-color: var(--hbar-5); }
+.markdown-rendered h6 { --hbar-color: var(--hbar-6); }
+
+/* ==================== H3上下留白,减少视觉紧凑感(实时预览) ========== */
+.markdown-source-view.mod-cm6 .HyperMD-header-3 {
+  padding-top: 0.3em;         /* 上 */
+  padding-bottom: 0.2em;   /* 下 */
+}
+
+/* ==================== 隐藏标题折叠箭头 ==================== */
+.cm-fold-indicator,
+.markdown-reading-view .collapse-indicator {
+  opacity: 0;
+}
+.cm-fold-indicator:hover,
+.markdown-reading-view .collapse-indicator:hover {
+  opacity: 1;
+}
+
+/* ==================== 前导符 ==================== */
+body {
+  /* H2 前导符 */
+  --h2-leader-color: var(--h2-block-bg);
+  --h2-leader-thickness: 5px;
+  --h2-leader-gap: 0;
+  --h2-leader-opacity: 1;
+  --h2-leader-min-width: 2em;
+
+  /* H3 前导符 */
+  --h3-leader-color: var(--text-muted);
+  --h3-leader-thickness: 1px;
+  --h3-leader-gap: 0.05em;
+  --h3-leader-opacity: 0.45;
+  --h3-leader-min-width: 2em;
+}
+
+/* 标题布局 */
+.markdown-rendered h2,
+.markdown-rendered h3,
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-2,
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-3 {
+  display: flex;
+  align-items: center;
+}
+
+/* H2 实线前导符 */
+.markdown-rendered h2::after,
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-2::after {
+  content: "";
+  flex: 1 1 auto;
+  min-width: var(--h2-leader-min-width);
+  margin-left: var(--h2-leader-gap);
+  border-top: var(--h2-leader-thickness) solid var(--h2-leader-color);
+  opacity: var(--h2-leader-opacity);
+}
+
+/* H3 实线前导符 */
+.markdown-rendered h3::after,
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-3::after {
+  content: "";
+  flex: 1 1 auto;
+  min-width: var(--h3-leader-min-width);
+  margin-left: var(--h3-leader-gap);
+  border-top: var(--h3-leader-thickness) solid var(--h3-leader-color);
+  opacity: var(--h3-leader-opacity);
+}
