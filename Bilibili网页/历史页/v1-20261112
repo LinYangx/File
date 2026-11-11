@@ -1,0 +1,144 @@
+/* ==UserStyle==
+@name          Bilibili历史页
+@namespace     github.com/openstyles/stylus
+@version       1.0.0
+@description   Compact layout for Bilibili's history page.
+@author        LinYang
+==/UserStyle== */
+
+@-moz-document url-prefix("https://www.bilibili.com/history") {
+  :root {
+    --bili-history-header-height: 44px;
+    --bili-history-content-width: 92%;
+  }
+
+  /* Header */
+  .bili-header,
+  #biliMainHeader {
+    height: var(--bili-history-header-height) !important;
+    min-height: var(--bili-history-header-height) !important;
+
+    .bili-header__bar {
+      height: var(--bili-history-header-height) !important;
+    }
+  }
+
+  #app {
+    /* Layout */
+    .fixed-side-menu,
+    .right-side {
+      display: none !important;
+    }
+
+    .main-content {
+      width: var(--bili-history-content-width) !important;
+      margin-top: 4px !important;
+    }
+
+    .section-cards {
+      grid-template-columns: repeat(6, 240px) !important;
+      row-gap: 10px !important;
+      padding-bottom: 10px !important;
+    }
+
+    .history-timeline-anchor {
+      margin-right: 6px !important;
+    }
+
+    .history-record {
+      padding: 0 !important;
+
+      .main-head {
+        width: var(--bili-history-content-width) !important;
+        margin-bottom: 0 !important;
+        padding: 0 !important;
+      }
+    }
+
+    .main-title {
+      margin-left: 30px !important;
+    }
+
+    /* Buttons */
+    .vui_button {
+      left: 240px !important;
+      max-width: fit-content !important;
+      min-width: 0 !important;
+      max-height: fit-content !important;
+      padding: 4px 8px !important;
+      border: none !important;
+    }
+
+    /* Filters and search */
+    .main-breadcrumbs {
+      .breadcrumbs {
+        width: var(--bili-history-content-width) !important;
+        padding: 0 !important;
+      }
+
+      .radio-tabs__item {
+        padding-top: 0 !important;
+        padding-bottom: 4px !important;
+      }
+
+      .search-bar {
+        height: 22px !important;
+        padding: 0 !important;
+      }
+
+      .search-bar input {
+        font-size: 12px !important;
+      }
+
+      .breadcrumbs__top {
+        min-height: 0 !important;
+      }
+
+      .breadcrumbs__top .left {
+        margin-left: 68px !important;
+      }
+
+      .breadcrumbs__bottom {
+        .filters {
+          padding-top: 0 !important;
+        }
+
+        .filter-item {
+          margin-top: 8px !important;
+        }
+
+        .radio-filter__item,
+        .search-date-picker__trigger .date-trigger {
+          height: fit-content !important;
+          padding: 4px 0 !important;
+        }
+
+        .radio-filter__item {
+          min-width: 76px !important;
+        }
+
+        .search-date-picker__trigger .date-trigger {
+          width: 120px !important;
+          border: none !important;
+        }
+      }
+
+      .batch-manage-btn span,
+      .clear-btn span {
+        font-size: 11px !important;
+      }
+    }
+
+    main[class="history-record fixed"] {
+      .main-breadcrumbs {
+        background-color: transparent !important;
+      }
+    }
+
+    /* Cards */
+    .bili-card-aside-action {
+      top: 46px !important;
+      bottom: inherit !important;
+    }
+  }
+}
