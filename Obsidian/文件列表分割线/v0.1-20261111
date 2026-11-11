@@ -1,0 +1,101 @@
+/* =========================================================
+   Obsidian 原生文件列表：指定文件夹分割线
+   data-path 填写仓库内的完整文件夹路径
+   ========================================================= */
+
+.workspace-leaf-content[data-type="file-explorer"] {
+  /* 分割线默认样式 */
+  --folder-divider-color: var(--background-modifier-border-hover);
+  --folder-divider-thickness: 1px;
+  --folder-divider-style: solid;       /* solid / dashed / dotted / double */
+  --folder-divider-opacity: 0.8;
+
+  /* 上下间距、左右缩进；左右设为 0 可接近全宽 */
+  --folder-divider-space-y: 6px;
+  --folder-divider-inset-x: 4px;
+}
+
+/* ---------------------------------------------------------
+   在指定文件夹上方添加分割线
+   按需增删 data-path 行
+   --------------------------------------------------------- */
+.workspace-leaf-content[data-type="file-explorer"]
+.nav-folder:is(
+  :has(> .nav-folder-title[data-path="00 Inbox"]),
+  :has(> .nav-folder-title[data-path="10 Projects"])
+)::before,
+
+/* ---------------------------------------------------------
+   在指定文件夹下方添加分割线
+   --------------------------------------------------------- */
+.workspace-leaf-content[data-type="file-explorer"]
+.nav-folder:is(
+  :has(> .nav-folder-title[data-path="20 Areas"]),
+  :has(> .nav-folder-title[data-path="90 Archive"])
+)::after {
+  content: "";
+  display: block;
+  box-sizing: border-box;
+  height: 0;
+
+  margin: var(--folder-divider-space-y)
+          var(--folder-divider-inset-x);
+
+  border: 0;
+  border-top: var(--folder-divider-thickness)
+              var(--folder-divider-style)
+              var(--folder-divider-color);
+
+  opacity: var(--folder-divider-opacity);
+  pointer-events: none;
+}/* =========================================================
+   Obsidian 原生文件列表：指定文件夹分割线
+   data-path 填写仓库内的完整文件夹路径
+   ========================================================= */
+
+.workspace-leaf-content[data-type="file-explorer"] {
+  /* 分割线默认样式 */
+  --folder-divider-color: var(--background-modifier-border-hover);
+  --folder-divider-thickness: 1px;
+  --folder-divider-style: solid;       /* solid / dashed / dotted / double */
+  --folder-divider-opacity: 0.8;
+
+  /* 上下间距、左右缩进；左右设为 0 可接近全宽 */
+  --folder-divider-space-y: 6px;
+  --folder-divider-inset-x: 4px;
+}
+
+/* ---------------------------------------------------------
+   在指定文件夹上方添加分割线
+   按需增删 data-path 行
+   --------------------------------------------------------- */
+.workspace-leaf-content[data-type="file-explorer"]
+.nav-folder:is(
+  :has(> .nav-folder-title[data-path="00 Inbox"]),
+  :has(> .nav-folder-title[data-path="10 Projects"])
+)::before,
+
+/* ---------------------------------------------------------
+   在指定文件夹下方添加分割线
+   --------------------------------------------------------- */
+.workspace-leaf-content[data-type="file-explorer"]
+.nav-folder:is(
+  :has(> .nav-folder-title[data-path="20 Areas"]),
+  :has(> .nav-folder-title[data-path="90 Archive"])
+)::after {
+  content: "";
+  display: block;
+  box-sizing: border-box;
+  height: 0;
+
+  margin: var(--folder-divider-space-y)
+          var(--folder-divider-inset-x);
+
+  border: 0;
+  border-top: var(--folder-divider-thickness)
+              var(--folder-divider-style)
+              var(--folder-divider-color);
+
+  opacity: var(--folder-divider-opacity);
+  pointer-events: none;
+}
