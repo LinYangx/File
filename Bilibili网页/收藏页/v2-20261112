@@ -1,0 +1,283 @@
+/* ==UserStyle==
+@name         Bilibili收藏页
+@namespace     xdcedar.stylus
+@author       LinYang
+@description    更好看更好用的Bilibili收藏页
+@version       20261111
+@homepageURL    https://github.com/XDcedar/bilibili-better-favorite-list
+@license       CC BY-NC-SA-4.0
+@preprocessor   default
+==/UserStyle== */
+
+/* 新版界面与旧版兼容样式 */
+@-moz-document regexp("https://space.bilibili.com/\\d+/favlist.*") {
+  /* ===== 新版界面：收藏夹侧边栏 ===== */
+  main.space-main {
+    /* bbfl = bilibili better favorite list */
+    --bbfl-grid-columns: 6;
+  }
+
+  /* 侧边栏与内容区改为纵向排列，侧边栏扩展为全长。 */
+  main.space-main .space-favlist {
+    display: flex;
+    flex-direction: column;
+  }
+
+  main.space-main .space-favlist .favlist-aside {
+    --aside-width: 100%;
+    position: static;
+  }
+
+  .fav-collapse-wrap {
+    max-height: 300px;
+  }
+
+  /*
+   * 收藏夹列表使用 Grid 布局：
+   * 1. 通过“新建收藏夹”按钮识别“我创建的收藏夹”；
+   * 2. 通过 :not() 适配合集、其他收藏及其他用户的收藏夹。
+   */
+  .fav-collapse .vui_collapse_item_content .fav-collapse-create + .vui_sidebar .fav-sortable-list,
+  .fav-collapse .vui_collapse_item_content .vui_sidebar:not(.fav-collapse-create + .vui_sidebar) {
+    display: grid;
+    grid-template-columns: repeat(var(--bbfl-grid-columns), minmax(0, 1fr));
+    justify-content: stretch;
+  }
+
+  /* 缩短“新建收藏夹”按钮，避免误触。 */
+  .fav-collapse-wrap > .fav-collapse-create {
+    width: calc(100% / var(--bbfl-grid-columns));
+  }
+
+  /*
+   * 默认收藏夹不在 .fav-sortable-list 中，需要单独调整宽度。
+   * 仅自己创建的收藏夹包含可排序列表，因此用 :has() 区分。
+   */
+  .fav-collapse .vui_collapse_item_content .vui_sidebar > .fav-sidebar-item:has(+ .fav-sortable-list) {
+    width: calc(100% / var(--bbfl-grid-columns));
+  }
+
+  .fav-sidebar-item .vui_sidebar-item-title .vui_ellipsis {
+    max-width: stretch;
+    /* 避免标题紧贴右侧的视频统计数字。 */
+    margin-right: 5px;
+  }
+
+  /* ===== 旧版界面：收藏夹侧边栏 ===== */
+  #page-fav {
+    --bbfl-legacy-grid-columns: 4;
+  }
+
+  #page-fav .fav-sidenav {
+    width: 100%;
+  }
+
+  #page-fav .fav-sidenav .fav-list-container#fav-createdList-container {
+    max-height: 300px;
+  }
+
+  /* 保持较矮且可滚动，因为滚动才会加载更早的订阅。 */
+  #page-fav .fav-sidenav .fav-list-container#fav-list-container {
+    max-height: 162px;
+  }
+
+  /* 右侧为滚动条预留 15px。 */
+  #page-fav .fav-list {
+    display: grid;
+    grid-template-columns: repeat(var(--bbfl-legacy-grid-columns), minmax(0, 1fr));
+    justify-content: stretch;
+    margin-right: 15px;
+  }
+
+  /*
+   * 默认收藏夹不在 .fav-list 中，需要与列表项等宽。
+   * 计算方式：(总宽度 - 滚动条预留宽度) / 列数 - 20px 内边距。
+   */
+  #page-fav .fav-list-container > .fav-item {
+    width: calc((100% - 15px) / var(--bbfl-legacy-grid-columns) - 20px);
+  }
+
+  #page-fav .fav-item {
+    display: flex;
+    align-items: center;
+  }
+
+  /*
+   * 仅调整视频收藏夹（.fav-container），不影响话题、专栏等收藏夹。
+   * 标题自动占据剩余空间，为收藏夹名称留出更多位置。
+   */
+  #page-fav .fav-container .text {
+    flex-grow: 1;
+    line-height: 35px;
+  }
+
+  #page-fav .fav-sidenav .num {
+    width: auto;
+    margin-right: 5px;
+  }
+
+  /* 悬停时仍显示视频收藏数。 */
+  #page-fav .col-full.master .fav-container .fav-item:hover .num {
+    display: inline-block;
+  }
+
+  /* ===== 旧版界面：收藏内容区通用样式 ===== */
+  #page-fav .fav-main {
+    width: 100%;
+    border-top: 10px solid #eee;
+  }
+
+  /*
+   * B站新增的 .clearfix 伪元素会在 Grid 首尾产生空白格子。
+   * 将首个伪元素移到新行行尾；设为 8 以兼容行数较多的话题收藏夹。
+   */
+  .clearfix::before {
+    grid-row-end: 8;
+  }
+}
+
+/* 视频页：收藏弹窗 */
+@-moz-document url-prefix("https://www.bilibili.com/video/") {
+  :is(.collection-m, .collection-m-exp) {
+    --bbfl-dialog-grid-columns: 3;
+    width: 950px;
+  }
+
+  :is(.collection-m, .collection-m-exp) .content .group-list {
+    max-height: unset;
+  }
+
+  :is(.collection-m, .collection-m-exp) .content .group-list ul {
+    display: grid;
+    grid-template-columns: repeat(var(--bbfl-dialog-grid-columns), minmax(0, 1fr));
+    row-gap: 2px;
+    justify-content: stretch;
+  }
+
+  :is(.collection-m, .collection-m-exp) .content .group-list li {
+    height: 25px;
+    padding: 3px 10px;
+  }
+
+  :is(.collection-m, .collection-m-exp) .content .group-list li label {
+    display: flex;
+    align-items: center;
+  }
+
+  /* min-width 防止标题过长时挤扁勾选框。 */
+  :is(.collection-m, .collection-m-exp) .content .group-list li input[type="checkbox"] + i {
+    min-width: 20px;
+    margin-right: 10px;
+  }
+
+  /* 防止“私密”标签因标题过长而换行。 */
+  :is(.collection-m, .collection-m-exp) .content .group-list li label .personal {
+    white-space: nowrap;
+  }
+
+  :is(.collection-m, .collection-m-exp) .content .group-list li label .count {
+    margin-left: auto;
+  }
+
+  :is(.collection-m, .collection-m-exp) .bottom .btn {
+    position: absolute;
+    right: 40px;
+  }
+
+  :is(.collection-m, .collection-m-exp) .content .group-list .add-group {
+    position: absolute;
+    bottom: 18px;
+  }
+}
+
+/* 旧版界面：视频收藏夹（fid 为数字） */
+@-moz-document regexp("https://space.bilibili.com/\\d+/favlist"),
+regexp("https://space.bilibili.com/\\d+/favlist\\?fid=\\d+.*") {
+  #page-fav .fav-main .fav-video-list {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    row-gap: 20px;
+  }
+
+  /* 统一列表项间距，并覆盖第五项原有的特殊右边距。 */
+  #page-fav .fav-main .small-item,
+  #page-fav .fav-main .small-item:nth-child(5n) {
+    justify-self: center;
+    margin: 0 5px;
+  }
+}
+
+/* 旧版界面：话题收藏夹 */
+@-moz-document regexp("https://space.bilibili.com/\\d+/favlist\\?fid=topic") {
+  #page-fav .fav-main .fav-video-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 20px;
+  }
+
+  #page-fav .fav-main .fav-video-list.topic-list .large-item {
+    justify-self: center;
+    margin: 0;
+  }
+}
+
+/* 旧版界面：课程收藏夹 */
+@-moz-document regexp("https://space.bilibili.com/\\d+/favlist\\?fid=pugvfav") {
+  #page-fav .fav-main .fav-pugv-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 20px;
+  }
+
+  #page-fav .fav-main .fav-content .fav-pugv-list .pugv-item {
+    justify-self: center;
+    margin: 0;
+  }
+}
+
+/* 页面精简：同时兼容 HTTP 与 HTTPS */
+@-moz-document regexp("^https?://space\\.bilibili\\.com/[0-9]+/favlist.*") {
+  #biliMainHeader,
+  .space-header,
+  .space-navbar,
+  /* “我追的合集/收藏夹” */
+  .favlist-aside > .vui_collapse > .fav-collapse:nth-child(2),
+  /* “其他收藏” */
+  .favlist-aside .fav-collapse:has(.fav-sidebar-item[title="话题收藏"]),
+  /* “我的笔记本” */
+  .favlist-aside .fav-collapse:has(a[href*="/v/note-list"]) {
+    display: none !important;
+  }
+
+  /* 顶部导航隐藏后，清除原有的负边距。 */
+  #app {
+    margin-top: 0 !important;
+  }
+  /* 收藏视频改为六列 */
+  .fav-list-main > .items {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 24px 16px !important; /* 行间距、列间距 */
+}
+
+  /* 清除原五列布局的宽度和外边距 */
+  .fav-list-main > .items > .items__item {
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+}
+/* 收藏页内容扩展至整个页面宽度 */
+main.space-main.route_favlist,
+main.space-main.route_favlist > .space-favlist {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: none !important;
+}
+
+main.space-main.route_favlist {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+}
+}
