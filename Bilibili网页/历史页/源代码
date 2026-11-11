@@ -1,0 +1,131 @@
+/* ==UserStyle==
+@name           （历史6列）B站
+@namespace      github.com/openstyles/stylus
+@version        1.0.0
+@description    .
+@author         TommyChen
+==/UserStyle== */
+
+@-moz-document url-prefix("https://www.bilibili.com/history") {
+	/* B站历史页 */
+	.bili-header,
+	#biliMainHeader {
+		min-height: 44px !important;
+		height: 44px !important;
+
+		.bili-header__bar {
+			height: 44px !important;
+		}
+	}
+
+	#app {
+		.fixed-side-menu,
+		.right-side {
+			display: none !important;
+		}
+		.vui_button {
+			left: 240px !important;
+			max-height: fit-content !important;
+			max-width: fit-content !important;
+			min-width: 0 !important;
+			padding: 4px 8px !important;
+			border: none !important;
+		}
+		.section-cards {
+			grid-template-columns: 240px 240px 240px 240px 240px 240px !important;
+			row-gap: 10px !important;
+			padding-bottom: 10px !important;
+		}
+
+		.main-content {
+			width: 92% !important;
+			margin-top: 4px !important;
+		}
+
+		.history-timeline-anchor {
+			margin-right: 6px !important;
+		}
+
+		.history-record {
+			padding: 0 !important;
+			.main-head {
+				width: 92% !important;
+				padding: 0 !important;
+				margin-bottom: 0 !important;
+			}
+		}
+
+		.main-breadcrumbs {
+			.breadcrumbs {
+				padding: 0 !important;
+				width: 92% !important;
+			}
+
+			.radio-tabs__item {
+				padding-top: 0 !important;
+				padding-bottom: 4px !important;
+			}
+
+			.search-bar {
+				height: 22px !important;
+				padding: 0 !important;
+				input {
+					font-size: 12px !important;
+				}
+			}
+
+			.breadcrumbs__top {
+				min-height: 0 !important;
+
+				.left {
+					margin-left: 68px !important;
+				}
+			}
+
+			.breadcrumbs__bottom {
+				.filters {
+					padding-top: 0 !important;
+				}
+
+				.filter-item {
+					margin-top: 8px !important;
+				}
+
+				.radio-filter__item {
+					height: fit-content !important;
+					min-width: 76px !important;
+					padding: 4px 0 !important;
+				}
+
+				.search-date-picker__trigger {
+					.date-trigger {
+						height: fit-content !important;
+						width: 120px !important;
+						padding: 4px 0 !important;
+						border: none !important;
+					}
+				}
+			}
+
+			.batch-manage-btn span,
+			.clear-btn span {
+				font-size: 11px !important;
+			}
+		}
+
+		.main-title {
+			margin-left: 30px !important;
+		}
+
+		main[class="history-record fixed"] {
+			.main-breadcrumbs {
+				background-color: transparent !important;
+			}
+		}
+
+		.bili-card-aside-action {
+			bottom: inherit !important;
+			top: 46px !important;
+		}
+	}
+}
