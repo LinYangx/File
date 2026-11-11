@@ -1,0 +1,86 @@
+/* ==================================================
+   代码块围栏折叠 v0.2-20261111
+
+   1. 独立于行号的 --- 标记规则
+   2. 非编辑状态收起代码块上下围栏，行号位置保持空白
+   3. 点击当前代码块任意位置时，展开其上下围栏
+   ================================================== */
+
+/* --------------------------------------------------
+   非编辑状态：视觉收起整条围栏行
+
+   不使用 display:none，也不产生 height:0px，
+   因此不会触发行号片段中针对零高度行的 --- 标记。
+   -------------------------------------------------- */
+.markdown-source-view.mod-cm6.is-live-preview
+.cm-line.HyperMD-codeblock:is(
+  .HyperMD-codeblock-begin,
+  .HyperMD-codeblock-end
+) {
+  display: block !important;
+  visibility: hidden !important;
+
+  height: 0.1px !important;
+  min-height: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+
+  font-size: 0 !important;
+  line-height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* --------------------------------------------------
+   裁剪非零高度行号的溢出内容
+
+   围栏折叠后的行号高度同样极小，因此数字会被裁掉。
+   普通零高度行号不受此规则影响，仍可显示 ---。
+   -------------------------------------------------- */
+.markdown-source-view.mod-cm6.is-live-preview
+.cm-lineNumbers
+.cm-gutterElement:not([style*="height: 0px"]) {
+  overflow: hidden !important;
+}
+
+/* --------------------------------------------------
+   以下三种情况展开并显示围栏
+   -------------------------------------------------- */
+
+/* 光标直接位于围栏行 */
+.markdown-source-view.mod-cm6.is-live-preview
+.cm-line.HyperMD-codeblock.cm-active:is(
+  .HyperMD-codeblock-begin,
+  .HyperMD-codeblock-end
+),
+
+/* 当前代码块的起始围栏 */
+.markdown-source-view.mod-cm6.is-live-preview
+.cm-line.HyperMD-codeblock-begin:has(
+  ~ .cm-line.HyperMD-codeblock.cm-active
+):not(
+  :has(
+    ~ .cm-line.HyperMD-codeblock-end
+    ~ .cm-line.HyperMD-codeblock.cm-active
+  )
+),
+
+/* 当前代码块的结束围栏 */
+.markdown-source-view.mod-cm6.is-live-preview
+.cm-line.HyperMD-codeblock.cm-active
+~ .cm-line.HyperMD-codeblock-end:not(
+  .cm-line.HyperMD-codeblock.cm-active
+  ~ .cm-line.HyperMD-codeblock-begin
+  ~ .cm-line.HyperMD-codeblock-end
+) {
+  display: block !important;
+  visibility: visible !important;
+
+  height: auto !important;
+  min-height: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+
+  font-size: inherit !important;
+  line-height: inherit !important;
+  overflow: visible !important;
+}
