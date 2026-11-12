@@ -1,0 +1,153 @@
+/* ==UserStyle==
+@name          Bilibili 历史页：全宽紧凑布局
+@namespace     github.com/openstyles/stylus
+@version       1.1.0
+@description   隐藏历史页时间轴，移除两侧留白，并优化卡片网格。
+@author        LinYang
+==/UserStyle== */
+
+@-moz-document url-prefix("https://www.bilibili.com/history") {
+  :root {
+    --history-page-gutter: 16px;
+    --history-card-min-width: 200px;
+    --history-grid-gap: 10px;
+  }
+
+  /* Hide the site header and floating side panels. */
+  .bili-header,
+  #biliMainHeader,
+  #app .fixed-side-menu,
+  #app .right-side {
+    display: none !important;
+  }
+
+  /* Use the available viewport width while retaining a small, safe gutter. */
+  #app .history-record {
+    padding: 0 !important;
+  }
+
+  #app .main-head,
+  #app .main-content,
+  #app .main-breadcrumbs .breadcrumbs {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    padding-right: var(--history-page-gutter) !important;
+    padding-left: var(--history-page-gutter) !important;
+  }
+
+  #app .main-head {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  #app .main-content {
+    margin-top: 4px !important;
+  }
+
+  #app .main-title,
+  #app .breadcrumbs__top .left {
+    margin-left: 0 !important;
+  }
+
+  /* Remove only the timeline navigation; keep every history section. */
+  #app .history-timeline-label,
+  #app .history-timeline-anchor,
+  #app .history-start,
+  #app .history-end {
+    display: none !important;
+  }
+
+  #app .history-timeline-item {
+    display: block !important;
+  }
+
+  #app .history-list,
+  #app .history-timeline,
+  #app .history-section {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  /* Let the card grid adapt to the newly available width. */
+  #app .section-cards {
+    width: 100% !important;
+    grid-template-columns: repeat(10, minmax(0, 1fr)) !important;
+    row-gap: var(--history-grid-gap) !important;
+    padding-bottom: var(--history-grid-gap) !important;
+  }
+
+  /* Compact filters and search controls. */
+  #app .main-breadcrumbs {
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+    background-color: transparent !important;
+  }
+
+  #app .breadcrumbs__top {
+    min-height: 0 !important;
+  }
+
+  #app .radio-tabs__item {
+    padding-top: 0 !important;
+    padding-bottom: 4px !important;
+  }
+
+  #app .search-bar {
+    height: 22px !important;
+    padding: 0 !important;
+  }
+
+  #app .search-bar input {
+    font-size: 12px !important;
+  }
+
+  #app .breadcrumbs__bottom .filters {
+    padding-top: 0 !important;
+  }
+
+  #app .breadcrumbs__bottom .filter-item {
+    margin-top: 8px !important;
+  }
+
+  #app .breadcrumbs__bottom .radio-filter__item,
+  #app .breadcrumbs__bottom .search-date-picker__trigger .date-trigger {
+    height: fit-content !important;
+    padding: 4px 0 !important;
+  }
+
+  #app .breadcrumbs__bottom .radio-filter__item {
+    min-width: 76px !important;
+  }
+
+  #app .breadcrumbs__bottom .search-date-picker__trigger .date-trigger {
+    width: 120px !important;
+    border: none !important;
+  }
+
+  #app .batch-manage-btn span,
+  #app .clear-btn span {
+    font-size: 11px !important;
+  }
+
+  #app .vui_button {
+    min-width: 0 !important;
+    max-width: fit-content !important;
+    max-height: fit-content !important;
+    padding: 4px 8px !important;
+    border: none !important;
+  }
+
+  /* Keep card actions aligned with the compact card layout. */
+  #app .bili-card-aside-action {
+    top: 46px !important;
+    bottom: auto !important;
+  }
+}
