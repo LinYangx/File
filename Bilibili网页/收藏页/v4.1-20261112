@@ -14,12 +14,11 @@
 
   /* ==================== 通用变量区 ==================== */
   main.space-main {
-    --bbfl-created-columns: 10;      /* 我创建的收藏夹列数 */
     --bbfl-video-columns: 8;         /* 视频列表列数 */
     --bbfl-page-gutter: 10px;        /* 页面左右留白 */
     --bbfl-video-gap: 10px;          /* 视频卡片间距 */
     --bbfl-detail-gap: 10px;         /* 详情区按钮与文字间距 */
-    --bbfl-grid-columns: 13;         /* 其他收藏夹列表列数 */
+    --bbfl-grid-columns: 13;         /* 收藏夹列表列数 */
   }
     
   /* ==================== 页面布局(新版界面) ==================== */
@@ -98,7 +97,7 @@
     .fav-collapse-wrap {
     display: grid !important;
     grid-template-columns:
-      repeat(var(--bbfl-created-columns), minmax(0, 1fr)) !important;
+      repeat(var(--bbfl-grid-columns), minmax(0, 1fr)) !important;
     gap: 6px 8px !important;
     align-items: center;
   }
@@ -482,6 +481,7 @@ main.space-main.route_favlist .favlist-main,
     white-space: nowrap;
   }
 
+  /* 防止"私密"标签因标题过长而换行。 */
   :is(.collection-m, .collection-m-exp)
     .content .group-list li label .count {
     margin-left: auto;
