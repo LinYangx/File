@@ -1,0 +1,931 @@
+// ==UserScript==
+// @name         Kimi 网页阅览
+// @namespace    local.kimi.reading.tuner
+// @version      1.6
+// @description  调节 Kimi 阅读排版与阅读密度，统一悬浮按钮和界面样式，压缩输入区间距，并隐藏指定元素及悬停提示
+// @match        https://www.kimi.com/*
+// @match        https://kimi.com/*
+// @grant        none
+// @noframes
+// @run-at       document-idle
+// ==/UserScript==
+
+// 安装：Tampermonkey → 添加新脚本 → 粘贴全部内容 → 保存，然后刷新 Kimi 页面。
+// 若 Kimi 改版导致调节失效，可打开面板点“诊断”，把输出内容用于排查选择器。
+
+(function () {
+  'use strict';
+
+  // ==========================================================================
+  // 用户可调参数（数值单位均为 px，阅读密度除外）
+  // ==========================================================================
+  const UI_CONFIG = Object.freeze({
+    cornerRadius: 0, // 全局圆角
+    composerMinHeight: 30, // 输入内容区最小高度；Kimi 原值为 48
+    composerPaddingTop: 14, // 输入内容区上间距；Kimi 原值为 12
+    composerPaddingBottom: 2,// 输入内容区下间距；Kimi 原值为 8
+    floatingButtonSize: 40, // 阅读调节 / 返回底部按钮的统一外框边长
+    floatingIconSize: 20, // 两按钮内部图标的统一边长
+    floatingButtonGap: 8, // 两按钮之间的水平间距
+    floatingButtonRight: 18, // 阅读调节按钮距窗口右侧的距离
+    floatingButtonBottom: 18, // 两按钮距窗口底部的距离
+    panelWidth: 280,
+  });
+
+  const STORAGE_KEY = 'kimi-reading-tuner';
+  const EDGE_BLOCK_PX = 17;
+
+  // 对象顺序就是面板顺序：行宽 → 行间距 → 阅读密度 → 字间距 → 字号。
+  const READING_DEFAULTS = Object.freeze({
+    width: 720,
+    space: 16,
+    density: 0,
+    letter: 0,
+    font: 16,
+  });
+
+  const SETTING_RANGES = Object.freeze({
+    width: { min: 480, max: 2000, step: 20 },
+    space: { min: 0, max: 48, step: 1 },
+    density: { min: 0, max: 100, step: 1 },
+    letter: { min: -1, max: 5, step: 0.1 },
+    font: { min: 12, max: 32, step: 1 },
+  });
+
+  const SETTING_LABELS = Object.freeze({
+    width: '行宽',
+    space: '行间距',
+    density: '阅读密度',
+    letter: '字间距',
+    font: '字号',
+  });
+
+  // ==========================================================================
+  // 页面选择器
+  // ==========================================================================
+  const SELECTORS = Object.freeze({
+    hiddenElements: `
+      .user-download-wrapper,
+      .ug-entrance-view,
+      .next-sidebar__drag-slot:has(> [data-testid="sidebar-nav-scheduled-tasks"]),
+      .next-sidebar__drag-slot:has(> [data-testid="sidebar-nav-inspiration"]),
+      [data-testid="sidebar-nav-scheduled-tasks"],
+      [data-testid="sidebar-nav-inspiration"],
+      .segment-avatar,
+      .chat-bottom:has(> .legal-footer),
+      .legal-footer,
+      .header-center:has(.membership-upgrade),
+      .home-header-center:has(.membership-upgrade),
+      .membership-upgrade,
+      .home-inspiration-entry
+    `,
+    // 仅阻止这些 ss.txt 元素的悬停事件；按钮本身及点击菜单保持可用。
+    hoverTriggers: [
+      '[data-testid="sidebar-collapse-trigger"]',
+      '[data-testid="sidebar-expand-trigger"]',
+      '[data-testid="chat-header-new-chat"]',
+      '.icon:has(> svg[name="Share_a"])',
+      'svg[name="Share_a"]',
+      '[data-testid="toolkit-trigger-btn"]',
+      '[data-testid="model-select-trigger"]',
+      '.dictation-mic-tooltip-trigger',
+      '.send-button-container',
+      '[data-testid="plugin-entry-trigger"]',
+      '[data-testid="sidebar-nav-more"]',
+    ].join(','),
+    backToBottom: '.chat-action .to-bottom',
+    assistantMessages: '.segment.segment-assistant, .chat-content-item-assistant',
+    densityRoots: '.segment.segment-assistant .markdown, .chat-content-item-assistant .markdown',
+    densityNodes: ':is(p, .paragraph, li, blockquote, h1, h2, h3, h4, h5, h6)',
+    densityExcluded: 'pre, code, table, .katex, .markdown-code, .markdown-math',
+  });
+
+  // ==========================================================================
+  // 配置读取、校验与状态
+  // ==========================================================================
+  function clampSetting(key, value) {
+    const range = SETTING_RANGES[key];
+    let number = Number(value);
+    if (!Number.isFinite(number)) number = READING_DEFAULTS[key];
+    number = Math.min(range.max, Math.max(range.min, number));
+    const stepText = String(range.step);
+    const digits = stepText.includes('.') ? stepText.split('.')[1].length : 0;
+    return Number((Math.round(number / range.step) * range.step).toFixed(digits));
+  }
+
+  function readStoredState() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      return stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function normalizeSettings(stored) {
+    const normalized = {};
+    for (const key of Object.keys(READING_DEFAULTS)) {
+      const value = Object.prototype.hasOwnProperty.call(stored, key)
+        ? stored[key]
+        : READING_DEFAULTS[key];
+      normalized[key] = clampSetting(key, value);
+    }
+    return normalized;
+  }
+
+  const storedState = readStoredState();
+  let settings = normalizeSettings(storedState);
+  let edgeLock = storedState.edgeLock !== false;
+
+  const ui = {
+    host: null,
+    shadow: null,
+    panel: null,
+    fab: null,
+    backFab: null,
+    backIcon: null,
+    backSource: null,
+    backFrame: 0,
+    diagBox: null,
+    sidebarSlot: null,
+    densityFrame: 0,
+  };
+
+  // ==========================================================================
+  // 样式构建
+  // ==========================================================================
+  const pageStyle = document.createElement('style');
+  pageStyle.id = 'kimi-reading-tuner-style';
+  (document.head || document.documentElement).appendChild(pageStyle);
+
+  function floatingButtonDeclarations() {
+    const config = UI_CONFIG;
+    return `
+      box-sizing: border-box !important;
+      width: ${config.floatingButtonSize}px !important;
+      height: ${config.floatingButtonSize}px !important;
+      padding: 0 !important;
+      border: 1px solid rgba(0, 0, 0, .14) !important;
+      border-radius: ${config.cornerRadius}px !important;
+      background: rgba(255, 255, 255, .94) !important;
+      color: #202124 !important;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, .16) !important;
+      backdrop-filter: blur(8px) !important;
+    `;
+  }
+
+  function buildInterfaceCss() {
+    const config = UI_CONFIG;
+
+    return `
+      /* 全局圆角 */
+      *, *::before, *::after {
+        border-radius: ${config.cornerRadius}px !important;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        border-radius: ${config.cornerRadius}px !important;
+      }
+      input[type="range"]::-moz-range-thumb {
+        border-radius: ${config.cornerRadius}px !important;
+      }
+
+      /* 隐藏 ds.txt 中列出的元素 */
+      ${SELECTORS.hiddenElements} {
+        display: none !important;
+      }
+
+      /* 压缩输入内容区的上下间距；占位文字同步对齐 */
+      [data-testid="chat-editor"] .chat-input {
+        --chat-input-min-height: ${config.composerMinHeight}px !important;
+      }
+      [data-testid="chat-editor"] .chat-input-prepend,
+      [data-testid="chat-editor"] .chat-input-editor-content {
+        padding: ${config.composerPaddingTop}px 0 ${config.composerPaddingBottom}px !important;
+      }
+      [data-testid="chat-editor"] .chat-input-placeholder {
+        top: ${config.composerPaddingTop}px !important;
+      }
+
+      /* 原按钮保留在 Vue DOM 中，由 Shadow DOM 内的代理按钮接管显示和点击。 */
+      ${SELECTORS.backToBottom}[data-krt-back-source] {
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+    `;
+  }
+
+  function buildReadingCss() {
+    const width = settings.width;
+    const space = settings.space;
+    const letter = settings.letter;
+    const font = settings.font;
+    const density = settings.density / 100;
+    const spaceScale = 1 - 0.875 * density;
+
+    return `
+      /* 阅读列宽 */
+      .share-content-list,
+      .chat-content-list,
+      .message-list-container:not(.top) .message-list {
+        box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: min(calc(${width}px + 60px), 100%) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+      .share-content-list .segment,
+      .chat-content-list .segment,
+      .message-list-container:not(.top) .message-list .segment,
+      .chat-content-item {
+        box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: min(calc(${width}px + 60px), 100%) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+      .segment.segment-assistant .segment-container,
+      .chat-content-item-assistant .segment-container {
+        box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: min(calc(${width}px + 16px), 100%) !important;
+      }
+      .segment.segment-assistant .segment-content,
+      .chat-content-item-assistant .segment-content {
+        box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: ${width}px !important;
+      }
+      .segment.segment-assistant .segment-content-box,
+      .segment.segment-assistant .markdown-container,
+      .segment.segment-assistant .markdown,
+      .chat-content-item-assistant .segment-content-box,
+      .chat-content-item-assistant .markdown-container,
+      .chat-content-item-assistant .markdown {
+        box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: ${width}px !important;
+      }
+
+      /* 正文字号与字间距 */
+      .segment.segment-assistant .markdown :is(p, .paragraph, li, blockquote),
+      .chat-content-item-assistant .markdown :is(p, .paragraph, li, blockquote) {
+        font-size: ${font}px !important;
+        letter-spacing: ${letter}px !important;
+      }
+      .segment.segment-assistant .markdown h1,
+      .chat-content-item-assistant .markdown h1 {
+        font-size: calc(${font}px * 1.375) !important;
+        letter-spacing: ${letter}px !important;
+      }
+      .segment.segment-assistant .markdown h2,
+      .chat-content-item-assistant .markdown h2 {
+        font-size: calc(${font}px * 1.25) !important;
+        letter-spacing: ${letter}px !important;
+      }
+      .segment.segment-assistant .markdown h3,
+      .chat-content-item-assistant .markdown h3 {
+        font-size: calc(${font}px * 1.125) !important;
+        letter-spacing: ${letter}px !important;
+      }
+      .segment.segment-assistant .markdown :is(h4, h5, h6),
+      .chat-content-item-assistant .markdown :is(h4, h5, h6) {
+        font-size: ${font}px !important;
+        letter-spacing: ${letter}px !important;
+      }
+
+      /* 阅读密度：只压缩已标记的正文行高 */
+      html[data-krt-density] [data-krt-line] {
+        line-height: calc(var(--krt-line) - var(--krt-line-cut, 0px) * ${density}) !important;
+      }
+
+      /* 行间距（段落块间距） */
+      .segment.segment-assistant .markdown > :is(p, .paragraph, blockquote, h1, h2, h3, h4, h5, h6, ul, ol, hr, .markdown-table, .markdown-code, .markdown-math),
+      .chat-content-item-assistant .markdown > :is(p, .paragraph, blockquote, h1, h2, h3, h4, h5, h6, ul, ol, hr, .markdown-table, .markdown-code, .markdown-math) {
+        margin-bottom: calc(${space}px * ${spaceScale}) !important;
+      }
+      .segment.segment-assistant .markdown > :last-child,
+      .chat-content-item-assistant .markdown > :last-child {
+        margin-bottom: 0 !important;
+      }
+      .segment.segment-assistant .markdown li > :is(p, .paragraph),
+      .chat-content-item-assistant .markdown li > :is(p, .paragraph) {
+        margin-bottom: calc(${space}px * .75 * ${spaceScale}) !important;
+      }
+      .segment.segment-assistant .markdown li > :is(p, .paragraph):last-child,
+      .chat-content-item-assistant .markdown li > :is(p, .paragraph):last-child {
+        margin-bottom: 0 !important;
+      }
+      .segment.segment-assistant .markdown-container,
+      .chat-content-item-assistant .markdown-container {
+        margin-bottom: calc(${space}px * ${spaceScale}) !important;
+      }
+      .segment.segment-assistant .markdown-container:last-child,
+      .chat-content-item-assistant .markdown-container:last-child {
+        margin-bottom: 0 !important;
+      }
+
+      /* 代码与公式保持原有字间距 */
+      .segment.segment-assistant .markdown :is(pre, code, .katex, .katex *),
+      .chat-content-item-assistant .markdown :is(pre, code, .katex, .katex *) {
+        letter-spacing: normal !important;
+      }
+    `;
+  }
+
+  function buildPanelCss() {
+    const config = UI_CONFIG;
+    const backButtonRight = config.floatingButtonRight
+      + config.floatingButtonSize
+      + config.floatingButtonGap;
+    return `
+      :host {
+        all: initial;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+      }
+      *, *::before, *::after {
+        box-sizing: border-box;
+        border-radius: ${config.cornerRadius}px !important;
+      }
+      input[type="range"]::-webkit-slider-thumb { border-radius: ${config.cornerRadius}px !important; }
+      input[type="range"]::-moz-range-thumb { border-radius: ${config.cornerRadius}px !important; }
+
+      .fab,
+      .back-fab {
+        ${floatingButtonDeclarations()}
+        position: fixed;
+        bottom: ${config.floatingButtonBottom}px;
+        z-index: 2147483647;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        font-family: inherit;
+        cursor: pointer;
+        transition: transform .15s ease, box-shadow .15s ease;
+      }
+      .fab { right: ${config.floatingButtonRight}px; }
+      .back-fab { right: ${backButtonRight}px; }
+      .back-fab[hidden] { display: none; }
+      .fab-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: ${config.floatingIconSize}px;
+        height: ${config.floatingIconSize}px;
+        flex: 0 0 ${config.floatingIconSize}px;
+        font: 600 13px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+      }
+      .back-icon > svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .fab:hover,
+      .back-fab:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(0, 0, 0, .2) !important; }
+      .fab:focus-visible,
+      .back-fab:focus-visible { outline: 2px solid #1783ff; outline-offset: 2px; }
+
+      .panel {
+        position: fixed;
+        right: ${config.floatingButtonRight}px;
+        bottom: ${config.floatingButtonBottom + config.floatingButtonSize + 10}px;
+        z-index: 2147483647;
+        width: min(${config.panelWidth}px, calc(100vw - 24px));
+        max-height: calc(100vh - 88px);
+        padding: 14px 16px 12px;
+        overflow: auto;
+        border: 1px solid rgba(0, 0, 0, .12);
+        background: rgba(255, 255, 255, .97);
+        color: #202124;
+        box-shadow: 0 10px 36px rgba(0, 0, 0, .2);
+        font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+        backdrop-filter: blur(10px);
+        animation: rt-pop .14s ease-out;
+      }
+      .panel[hidden] { display: none; }
+      @keyframes rt-pop {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+      .title { font-size: 14px; font-weight: 600; letter-spacing: .01em; }
+      .close {
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        opacity: .55;
+        font: 20px/1 sans-serif;
+        cursor: pointer;
+      }
+      .close:hover { opacity: 1; background: rgba(128, 128, 128, .14); }
+      .close:focus-visible { outline: 2px solid #1783ff; outline-offset: 1px; }
+
+      .row { margin-top: 8px; }
+      .row label { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+      .name { font-size: 12.5px; color: #4b5563; }
+      .val { color: #6b7280; font-size: 11.5px; font-variant-numeric: tabular-nums; }
+      input[type="range"] {
+        display: block;
+        width: 100%;
+        height: 20px;
+        margin: 3px 0 0;
+        padding: 0;
+        accent-color: #1783ff;
+        cursor: pointer;
+        background: transparent;
+      }
+
+      .edge-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 8px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(128, 128, 128, .16);
+        cursor: pointer;
+      }
+      .edge-row .name { font-size: 12.5px; color: #4b5563; }
+      .edge-row input[type="checkbox"] {
+        width: 15px;
+        height: 15px;
+        margin: 0;
+        flex: 0 0 auto;
+        accent-color: #1783ff;
+        cursor: pointer;
+      }
+
+      .actions { display: flex; gap: 8px; margin-top: 9px; }
+      .actions button {
+        flex: 1;
+        height: 30px;
+        border: 1px solid rgba(0, 0, 0, .12);
+        background: rgba(0, 0, 0, .035);
+        color: inherit;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .actions button:hover { background: rgba(0, 0, 0, .07); }
+      .actions button:focus-visible { outline: 2px solid #1783ff; outline-offset: 1px; }
+
+      .diag {
+        display: none;
+        width: 100%;
+        max-height: 190px;
+        margin: 9px 0 0;
+        padding: 8px;
+        overflow: auto;
+        border: 1px solid rgba(128, 128, 128, .22);
+        background: rgba(128, 128, 128, .07);
+        color: inherit;
+        font: 10.5px/1.45 Consolas, "Cascadia Mono", monospace;
+        white-space: pre-wrap;
+        word-break: break-all;
+        user-select: text;
+      }
+      .diag.show { display: block; }
+
+      :host-context(.dark) .fab,
+      :host-context(.dark) .back-fab {
+        border-color: rgba(255, 255, 255, .16) !important;
+        background: rgba(42, 43, 48, .94) !important;
+        color: #eceff3 !important;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .48) !important;
+      }
+      :host-context(.dark) .panel {
+        border-color: rgba(255, 255, 255, .14);
+        background: rgba(38, 39, 44, .97);
+        color: #eceff3;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, .55);
+      }
+      :host-context(.dark) .name,
+      :host-context(.dark) .edge-row .name { color: #c5cad3; }
+      :host-context(.dark) .edge-row { border-top-color: rgba(255, 255, 255, .14); }
+      :host-context(.dark) .val { color: #9aa1ad; }
+      :host-context(.dark) .actions button {
+        border-color: rgba(255, 255, 255, .14);
+        background: rgba(255, 255, 255, .07);
+      }
+      :host-context(.dark) .actions button:hover,
+      :host-context(.dark) .close:hover { background: rgba(255, 255, 255, .12); }
+      :host-context(.dark) .diag {
+        border-color: rgba(255, 255, 255, .16);
+        background: rgba(255, 255, 255, .06);
+      }
+    `;
+  }
+
+  // ==========================================================================
+  // 应用与保存
+  // ==========================================================================
+  function applyStyles() {
+    pageStyle.textContent = [buildInterfaceCss(), buildReadingCss()].join('\n');
+  }
+
+  function saveAndApply({ remeasureDensity = false } = {}) {
+    try {
+      // 仅写入当前配置键，同时移除旧版控件留下的存储字段。
+      const stateToSave = Object.assign({}, settings, { edgeLock });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+    } catch (error) {
+      // 存储不可用时仍让本次设置在页面中生效。
+    }
+    applyStyles();
+    measureDensity(remeasureDensity);
+  }
+
+  // ==========================================================================
+  // 阅读密度（参考 Roomy）
+  // ==========================================================================
+  function clearDensityMarks() {
+    document.querySelectorAll('[data-krt-line]').forEach((node) => {
+      node.removeAttribute('data-krt-line');
+      node.style.removeProperty('--krt-line');
+      node.style.removeProperty('--krt-line-cut');
+    });
+  }
+
+  function collectDensityNodes() {
+    const nodes = new Set();
+    document.querySelectorAll(SELECTORS.densityRoots).forEach((root) => {
+      root.querySelectorAll(SELECTORS.densityNodes).forEach((node) => {
+        if (!node.closest(SELECTORS.densityExcluded)) nodes.add(node);
+      });
+    });
+    return nodes;
+  }
+
+  function measureDensity(force = false) {
+    const root = document.documentElement;
+    if (!root) return;
+
+    if (settings.density <= 0) {
+      root.removeAttribute('data-krt-density');
+      clearDensityMarks();
+      return;
+    }
+    if (force) clearDensityMarks();
+
+    const nodes = collectDensityNodes();
+    // 测量时暂时停用密度覆盖，取得当前字号下的原生行高。
+    root.removeAttribute('data-krt-density');
+    try {
+      nodes.forEach((node) => {
+        if (!force && node.hasAttribute('data-krt-line')) return;
+        const computed = getComputedStyle(node);
+        const fontSize = parseFloat(computed.fontSize);
+        if (!(fontSize > 0)) return;
+
+        const measuredLine = parseFloat(computed.lineHeight);
+        const lineHeight = measuredLine > 0 ? measuredLine : fontSize * 1.625;
+        const minimum = Math.max(fontSize * 1.15, lineHeight * 0.82);
+        const reduction = Math.max(0, lineHeight - minimum);
+
+        node.style.setProperty('--krt-line', lineHeight + 'px');
+        node.style.setProperty('--krt-line-cut', reduction + 'px');
+        node.setAttribute('data-krt-line', '');
+      });
+    } finally {
+      root.setAttribute('data-krt-density', '');
+    }
+  }
+
+  function scheduleDensityMeasure() {
+    if (ui.densityFrame || settings.density <= 0) return;
+    ui.densityFrame = requestAnimationFrame(() => {
+      ui.densityFrame = 0;
+      measureDensity();
+    });
+  }
+
+  // ==========================================================================
+  // 悬停提示与侧栏边缘事件拦截
+  // ==========================================================================
+  function blockSuppressedHover(event) {
+    if (!(event.target instanceof Element)) return;
+    if (event.target.closest(SELECTORS.hoverTriggers)) event.stopImmediatePropagation();
+  }
+
+  function isEdgeBlocked(event) {
+    if (!edgeLock || event.clientX > EDGE_BLOCK_PX) return false;
+    if (!ui.sidebarSlot || !ui.sidebarSlot.isConnected) {
+      ui.sidebarSlot = document.querySelector('.sidebar-slot');
+    }
+    if (!ui.sidebarSlot) return false;
+    return ui.sidebarSlot.classList.contains('not-mobile')
+      && ui.sidebarSlot.classList.contains('is-collapsed')
+      && !ui.sidebarSlot.classList.contains('is-floating');
+  }
+
+  function blockEdgeHover(event) {
+    if (isEdgeBlocked(event)) event.stopImmediatePropagation();
+  }
+
+  function installEventBlockers() {
+    const hoverEvents = ['pointerover', 'pointerenter', 'mouseover', 'mouseenter', 'pointermove', 'mousemove'];
+    hoverEvents.forEach((type) => {
+      window.addEventListener(type, blockSuppressedHover, { capture: true, passive: true });
+    });
+    ['pointermove', 'mousemove'].forEach((type) => {
+      window.addEventListener(type, blockEdgeHover, { capture: true, passive: true });
+    });
+  }
+
+  // ==========================================================================
+  // 阅读调节面板
+  // ==========================================================================
+  function formatSettingValue(key, value) {
+    if (key === 'density') return value + '%';
+    if (key === 'letter') return Number(value.toFixed(1)) + ' px';
+    return value + ' px';
+  }
+
+  function readingControlsHtml() {
+    return Object.keys(READING_DEFAULTS).map((key) => {
+      const range = SETTING_RANGES[key];
+      return `
+        <div class="row">
+          <label for="rt-${key}">
+            <span class="name">${SETTING_LABELS[key]}</span>
+            <span class="val" id="rt-v-${key}"></span>
+          </label>
+          <input type="range" id="rt-${key}" data-key="${key}"
+                 min="${range.min}" max="${range.max}" step="${range.step}">
+        </div>`;
+    }).join('');
+  }
+
+  function panelHtml() {
+    return `
+      <style>${buildPanelCss()}</style>
+      <button class="back-fab" type="button" aria-label="返回至底部" title="返回至底部" hidden>
+        <span class="fab-icon back-icon" aria-hidden="true"></span>
+      </button>
+      <button class="fab" type="button" aria-label="打开 Kimi 阅读调节" aria-expanded="false" title="Kimi 阅读调节">
+        <span class="fab-icon" aria-hidden="true">Aa</span>
+      </button>
+      <div class="panel" hidden role="dialog" aria-label="Kimi 阅读调节">
+        <div class="head">
+          <span class="title">Kimi 阅读调节</span>
+          <button class="close" type="button" aria-label="关闭" title="关闭">×</button>
+        </div>
+        ${readingControlsHtml()}
+        <label class="edge-row" for="rt-edge-lock" title="勾选后，鼠标贴近屏幕左边缘不会自动展开导航栏；仍可点击左上角按钮展开">
+          <span class="name">禁止左边缘悬停展开</span>
+          <input type="checkbox" id="rt-edge-lock">
+        </label>
+        <div class="actions">
+          <button type="button" class="reset">重置</button>
+          <button type="button" class="diag-btn">诊断</button>
+        </div>
+        <pre class="diag" aria-live="polite"></pre>
+      </div>
+    `;
+  }
+
+  function syncPanel() {
+    if (!ui.shadow) return;
+    const edgeInput = ui.shadow.getElementById('rt-edge-lock');
+    if (edgeInput) edgeInput.checked = edgeLock;
+
+    for (const key of Object.keys(READING_DEFAULTS)) {
+      const input = ui.shadow.getElementById('rt-' + key);
+      const output = ui.shadow.getElementById('rt-v-' + key);
+      if (!input || !output) continue;
+      input.value = String(settings[key]);
+      output.textContent = formatSettingValue(key, settings[key]);
+    }
+  }
+
+  function setPanelOpen(open) {
+    if (!ui.panel || !ui.fab) return;
+    ui.panel.hidden = !open;
+    ui.fab.setAttribute('aria-expanded', String(open));
+    ui.fab.setAttribute('aria-label', open ? '关闭 Kimi 阅读调节' : '打开 Kimi 阅读调节');
+  }
+
+  function resetSettings() {
+    settings = Object.assign({}, READING_DEFAULTS);
+    edgeLock = true;
+    syncPanel();
+    saveAndApply({ remeasureDensity: true });
+  }
+
+  function showDiagnostics() {
+    const text = diagnose();
+    if (!ui.diagBox) return;
+    ui.diagBox.textContent = text;
+    ui.diagBox.classList.add('show');
+    ui.diagBox.scrollTop = 0;
+    try {
+      navigator.clipboard.writeText(text).catch(() => {});
+    } catch (error) {
+      // 剪贴板不可用时仍保留可见的诊断文本。
+    }
+  }
+
+  function handlePanelInput(event) {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) return;
+
+    if (target.id === 'rt-edge-lock') {
+      edgeLock = target.checked;
+      saveAndApply();
+      return;
+    }
+
+    const key = target.dataset.key;
+    if (!key || !Object.prototype.hasOwnProperty.call(READING_DEFAULTS, key)) return;
+    settings[key] = clampSetting(key, target.value);
+    syncPanel();
+    saveAndApply({ remeasureDensity: key === 'font' });
+  }
+
+  function syncBackToBottom() {
+    if (!ui.backFab || !ui.backFab.isConnected) return;
+
+    const source = document.querySelector(SELECTORS.backToBottom);
+    if (ui.backSource && ui.backSource !== source) {
+      ui.backSource.removeAttribute('data-krt-back-source');
+    }
+    ui.backSource = source;
+
+    if (!source || !source.isConnected) {
+      ui.backFab.hidden = true;
+      return;
+    }
+
+    source.setAttribute('data-krt-back-source', '');
+    const iconHtml = source.innerHTML;
+    if (ui.backIcon && ui.backIcon.innerHTML !== iconHtml) {
+      ui.backIcon.innerHTML = iconHtml;
+    }
+    ui.backFab.hidden = !source.classList.contains('to-bottom-show');
+  }
+
+  function scheduleBackToBottomSync() {
+    if (ui.backFrame) return;
+    ui.backFrame = requestAnimationFrame(() => {
+      ui.backFrame = 0;
+      syncBackToBottom();
+    });
+  }
+
+  function handleBackToBottomClick() {
+    if (ui.backSource && ui.backSource.isConnected) {
+      ui.backSource.click();
+      return;
+    }
+    syncBackToBottom();
+  }
+
+  function mountPanel() {
+    if (ui.host && ui.host.isConnected) return;
+
+    ui.host = document.createElement('div');
+    ui.host.id = 'kimi-reading-tuner-host';
+    ui.host.style.cssText = 'all:initial;';
+    document.body.appendChild(ui.host);
+
+    ui.shadow = ui.host.attachShadow({ mode: 'open' });
+    ui.shadow.innerHTML = panelHtml();
+    ui.fab = ui.shadow.querySelector('.fab');
+    ui.backFab = ui.shadow.querySelector('.back-fab');
+    ui.backIcon = ui.shadow.querySelector('.back-icon');
+    ui.panel = ui.shadow.querySelector('.panel');
+    ui.diagBox = ui.shadow.querySelector('.diag');
+
+    ui.fab.addEventListener('click', () => setPanelOpen(ui.panel.hidden));
+    ui.backFab.addEventListener('click', handleBackToBottomClick);
+    ui.shadow.querySelector('.close').addEventListener('click', () => setPanelOpen(false));
+    ui.shadow.querySelector('.reset').addEventListener('click', resetSettings);
+    ui.shadow.querySelector('.diag-btn').addEventListener('click', showDiagnostics);
+    ui.shadow.addEventListener('input', handlePanelInput);
+
+    // 避免方向键、空格等按键被聊天页快捷键截获。
+    ui.panel.addEventListener('keydown', (event) => event.stopPropagation());
+    syncPanel();
+    syncBackToBottom();
+  }
+
+  function installPanelDismissHandlers() {
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && ui.panel && !ui.panel.hidden) setPanelOpen(false);
+    }, true);
+    document.addEventListener('pointerdown', (event) => {
+      if (!ui.panel || ui.panel.hidden || !ui.host) return;
+      if (!event.composedPath().includes(ui.host)) setPanelOpen(false);
+    }, true);
+  }
+
+  // ==========================================================================
+  // 诊断
+  // ==========================================================================
+  function describeElement(element) {
+    const computed = getComputedStyle(element);
+    const classes = typeof element.className === 'string'
+      ? element.className.trim().replace(/\s+/g, '.')
+      : '';
+    const id = element.id ? '#' + element.id : '';
+    const rect = element.getBoundingClientRect();
+    return [
+      element.tagName.toLowerCase() + id + (classes ? '.' + classes : ''),
+      'w=' + Math.round(rect.width),
+      'mw=' + computed.maxWidth,
+      'fs=' + computed.fontSize,
+      'lh=' + computed.lineHeight,
+      'ls=' + computed.letterSpacing,
+      'mb=' + computed.marginBottom,
+    ].join(' | ');
+  }
+
+  function diagnose() {
+    const assistants = Array.from(document.querySelectorAll(SELECTORS.assistantMessages));
+    const lines = [
+      'Kimi 阅读调节诊断',
+      'URL: ' + location.href,
+      'viewport: ' + window.innerWidth + ' × ' + window.innerHeight,
+      'AI 回复容器: ' + assistants.length,
+      '当前设置: ' + JSON.stringify(Object.assign({}, settings, { edgeLock })),
+      '',
+      '=== 外层容器 ===',
+    ];
+
+    [
+      '.share-content-list',
+      '.chat-content-list',
+      '.message-list-container:not(.top) .message-list',
+      '.chat-detail-main',
+    ].forEach((selector) => {
+      const element = document.querySelector(selector);
+      lines.push((element ? '✓ ' : '× ') + selector + (element ? '  ' + describeElement(element) : ''));
+    });
+
+    const last = assistants[assistants.length - 1];
+    lines.push('', '=== 最后一条 AI 回复 ===');
+    if (!last) {
+      lines.push('未找到 AI 回复。若页面刚打开，请先发起一次对话再诊断。');
+      lines.push('页面中的 .segment 数量: ' + document.querySelectorAll('.segment').length);
+      lines.push('页面中的 .markdown 数量: ' + document.querySelectorAll('.markdown').length);
+      return lines.join('\n');
+    }
+
+    let node = last;
+    let depth = 0;
+    while (node && node !== document.body && depth < 14) {
+      lines.push('  '.repeat(depth) + describeElement(node));
+      node = node.parentElement;
+      depth += 1;
+    }
+
+    const markdown = last.querySelector('.markdown');
+    const sample = last.querySelector('.markdown p, .markdown .paragraph, .markdown li');
+    lines.push('', '=== 正文元素 ===');
+    lines.push(markdown ? describeElement(markdown) : '未找到 .markdown');
+    lines.push(sample ? describeElement(sample) : '未找到可调节的正文段落');
+    return lines.join('\n');
+  }
+
+  // ==========================================================================
+  // 启动与动态页面维护
+  // ==========================================================================
+  const pageObserver = new MutationObserver((mutations) => {
+    if (ui.host && !ui.host.isConnected && document.body) mountPanel();
+
+    const hasAddedNodes = mutations.some((mutation) => mutation.addedNodes.length > 0);
+    if (settings.density > 0 && hasAddedNodes) scheduleDensityMeasure();
+
+    const backButtonMayHaveChanged = mutations.some((mutation) => (
+      mutation.type === 'childList'
+      || (mutation.target instanceof Element && mutation.target.matches(SELECTORS.backToBottom))
+    ));
+    if (backButtonMayHaveChanged) scheduleBackToBottomSync();
+  });
+
+  function init() {
+    saveAndApply({ remeasureDensity: true });
+    mountPanel();
+    pageObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+  }
+
+  installEventBlockers();
+  installPanelDismissHandlers();
+
+  if (document.body) {
+    init();
+  } else {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  }
+})();
