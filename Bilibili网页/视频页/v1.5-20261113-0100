@@ -1,0 +1,367 @@
+/* ==UserStyle==
+@name           Bilibili视频页：紧凑宽屏
+@namespace      xdcedar.stylus
+@author         LinYang
+@description    隐藏顶栏、扩展视频区、压缩标题与作者区域，并优化作者栏及右侧推荐卡片布局。
+@version        20261113.10
+@preprocessor   default
+==/UserStyle== */
+
+@-moz-document
+  url-prefix("https://www.bilibili.com/video/"),
+  url-prefix("https://bilibili.com/video/") {
+
+  /* ==================== 可调参数 ==================== */
+  :root {
+    --bili-video-page-gutter: 8px;         /* 页面左右留白,同时作为左右两栏间距 */
+    --bili-player-aspect-ratio: 5 / 3;    /* 主视频窗口宽高比,可改为 4 / 3、16 / 9、21 / 9 */
+    /* 标题区 */
+    --bili-video-header-height: 76px;       /* 标题区与作者区的共同高度 */
+    --bili-video-header-padding-top: 12px;    /* 顶部间距 */
+    --bili-video-header-padding-bottom: 6px;  /* 底部间距 */
+    --bili-video-title-line-height: 30px;    /* 视频标题的文字行高 */
+    /* 作者头像 */
+    --bili-up-avatar-radius: 999px;        /* 角弧 */
+    --bili-up-avatar-gap: 12px;           /* 头像与名称的间距。 */
+    /* "关注"按钮 */
+    --bili-follow-height: 26px;           /* 高度及文字行高。 */
+    --bili-follow-min-width: 80px;         /* 最小宽度 */
+    --bili-follow-padding-x: 12px;         /* 按钮内部的左右间距 */
+    --bili-follow-radius: 0px;            /* 角弧 */
+    --bili-follow-font-size: 13px;         /* 文字大小 */
+    /* 视频工具栏 */
+    --bili-toolbar-padding-block: 6px;      /* 上下间距 */
+    --bili-toolbar-item-height: 32px;       /* 高度("收藏"除外) */
+    --bili-toolbar-icon-size: 24px;        /* 图标尺寸("收藏"除外) */
+    --bili-toolbar-icon-gap: 4px;          /* 图标与右侧文字的间距 */
+    --bili-toolbar-item-gap: 12px;         /* 相邻按钮的左右间距 */
+    /* 推荐视频封面 */
+    --bili-rec-cover-width: 170px;         /* 宽度 */
+    --bili-rec-cover-height: 96px;         /* 高度 */
+    --bili-rec-info-gap: 10px;            /* 封面与标题信息列的间距 */
+  }
+
+  /* ==================== 全局与主布局 ==================== */
+  #biliMainHeader,
+  .usercard-wrap {
+    display: none !important;
+  }
+
+  /* 隐藏视频活动推广卡、客服入口和返回顶部按钮 */
+  .video-resource-list,
+  .customer-service,
+  .back-to-top-wrap {
+    display: none !important;
+  }
+
+  #app.app-v1 {
+    padding-top: 0 !important;
+  }
+
+  .video-container-v1 {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-inline: 0 !important;
+    padding-inline: var(--bili-video-page-gutter) !important;
+  }
+
+  /* 覆盖B站动态写入的固定宽度,让左栏占满剩余空间 */
+  .video-container-v1 > .left-container {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin-inline: 0 !important;
+  }
+
+  .video-container-v1 > .right-container {
+    flex: 0 0 auto !important;
+    margin-left: var(--bili-video-page-gutter) !important;
+  }
+
+  .video-container-v1 > .left-container
+    :is(#playerWrap, #bilibili-player) {
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    aspect-ratio: var(--bili-player-aspect-ratio) !important;
+  }
+
+  /* 隐藏播放器顶部的关注浮层、音乐信息、问号入口 */
+  #bilibili-player :is(
+    .bpx-player-top-left-follow,
+    .bpx-player-top-left-music,
+    .bpx-player-top-issue
+  ) {
+    display: none !important;
+  }
+
+  /* ==================== 标题信息区 ==================== */
+  .video-info-container {
+    height: var(--bili-video-header-height) !important;
+    min-height: 0 !important;
+    padding-block:
+      var(--bili-video-header-padding-top)
+      var(--bili-video-header-padding-bottom) !important;
+  }
+
+  .video-info-container .video-info-title-inner .video-title {
+    line-height: var(--bili-video-title-line-height) !important;
+  }
+
+  .video-info-container .video-info-meta {
+    margin-top: 2px !important;
+  }
+
+  /* 隐藏"未经作者授权,禁止转载"等版权声明 */
+  .video-info-container .video-info-meta .copyright {
+    display: none !important;
+  }
+
+  /* ==================== 作者信息区 ==================== */
+  .up-info-container {
+    height: var(--bili-video-header-height) !important;
+    min-height: 0 !important;
+    padding-block: 0 !important;
+  }
+
+  .up-info-container .up-info--left {
+    flex: 0 0 auto !important;
+    align-self: center !important;
+  }
+
+  .up-info-container :is(.up-avatar, .bili-avatar, .bili-avatar-img) {
+    border-radius: var(--bili-up-avatar-radius) !important;
+  }
+
+  /* 头像、作者名、关注按钮按单行排列并垂直居中 */
+  .up-info-container .up-info--right {
+    display: flex !important;
+    align-items: center !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    margin-left: var(--bili-up-avatar-gap) !important;
+    overflow: visible !important;
+  }
+
+  .up-info-container :is(.up-info__detail, .up-detail) {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .up-info-container :is(.up-info__detail, .up-detail-top) {
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+  }
+
+  .up-info-container .up-detail-top {
+    min-width: 0 !important;
+  }
+
+  .up-info-container .up-name {
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  /* 仅保留作者名和关注按钮 */
+  .up-info-container :is(.up-description, .send-msg),
+  .up-info-container .upinfo-btn-panel :is(
+    .charge-btn,
+    .old-charge-btn,
+    .new-charge-btn,
+    .following-charge-btn,
+    .not-follow-charge-btn
+  ) {
+    display: none !important;
+  }
+
+  .up-info-container .up-info__btn-panel {
+    flex: 0 0 auto !important;
+    margin: 0 0 0 auto !important;
+    padding: 0 !important;
+  }
+
+  .up-info-container .upinfo-btn-panel {
+    margin: 0 !important;
+  }
+
+  .up-info-container .upinfo-btn-panel .follow-btn {
+    flex: 0 0 auto !important;
+    box-sizing: border-box !important;
+    width: auto !important;
+    min-width: var(--bili-follow-min-width) !important;
+    max-width: none !important;
+    height: var(--bili-follow-height) !important;
+    min-height: 0 !important;
+    padding: 0 var(--bili-follow-padding-x) !important;
+    border-radius: var(--bili-follow-radius) !important;
+    font-size: var(--bili-follow-font-size) !important;
+    line-height: var(--bili-follow-height) !important;
+  }
+
+  /* ==================== 视频工具栏 ==================== */
+  .video-toolbar-container {
+    justify-content: flex-start !important;
+    min-height: 0 !important;
+    padding-block: var(--bili-toolbar-padding-block) !important;
+  }
+
+  /* 展开原有左右分组,使所有按钮可以在同一弹性布局中排序 */
+  .video-toolbar-container :is(
+    .video-toolbar-left,
+    .video-toolbar-left-main,
+    .video-toolbar-right
+  ) {
+    display: contents !important;
+  }
+
+  .video-toolbar-container .toolbar-left-item-wrap {
+    order: 10;
+    margin: 0 var(--bili-toolbar-item-gap) 0 0 !important;
+  }
+
+  /* 仅缩小点赞、投币、分享；收藏保持原尺寸 */
+  .video-toolbar-container .video-toolbar-left-item:not(.video-fav) {
+    width: auto !important;
+    min-width: 0 !important;
+    height: var(--bili-toolbar-item-height) !important;
+  }
+
+  .video-toolbar-container
+    .video-toolbar-left-item:not(.video-fav)
+    .video-toolbar-item-icon {
+    width: var(--bili-toolbar-icon-size) !important;
+    height: var(--bili-toolbar-icon-size) !important;
+    margin-right: var(--bili-toolbar-icon-gap) !important;
+  }
+
+  /* 收藏数置于图标左侧,使收藏图标靠近最右侧的三竖点 */
+  .video-toolbar-container .video-fav {
+    flex-direction: row-reverse !important;
+  }
+
+  .video-toolbar-container .video-fav .video-fav-icon {
+    margin-right: 4px !important;
+    margin-left: 8px !important;
+  }
+
+  /* 左侧顺序：点赞 → 投币 → 分享 → 记笔记 */
+  .video-toolbar-container .toolbar-left-item-wrap:has(.video-like) {
+    order: 1;
+  }
+
+  .video-toolbar-container .toolbar-left-item-wrap:has(.video-coin) {
+    order: 2;
+  }
+
+  .video-toolbar-container .toolbar-left-item-wrap:has(.video-share-wrap) {
+    order: 3;
+  }
+
+  .video-toolbar-container .video-toolbar-right > .video-note {
+    order: 4;
+    margin: 0 !important;
+  }
+
+  .video-toolbar-container .video-toolbar-right > * {
+    order: 5;
+  }
+
+  /* 收藏推到最右端,但仍位于三竖点之前 */
+  .video-toolbar-container .toolbar-left-item-wrap:has(.video-fav) {
+    order: 20;
+    margin: 0 var(--bili-toolbar-item-gap) 0 auto !important;
+  }
+
+  .video-toolbar-container .video-tool-more {
+    order: 21;
+  }
+
+  .video-toolbar-container .video-complaint {
+    display: none !important;
+  }
+
+  /* ==================== 推荐列表 ==================== */
+  .recommend-list-v1 .video-page-special-card-small {
+    display: none !important;
+  }
+
+  .recommend-list-v1
+    :is(.video-page-card-small, .video-page-operator-card-small)
+    .pic-box {
+    flex: 0 0 var(--bili-rec-cover-width) !important;
+    width: var(--bili-rec-cover-width) !important;
+    height: var(--bili-rec-cover-height) !important;
+    border-radius: 0 !important;
+  }
+
+  /* 封面及所有覆盖层统一使用方角 */
+  .recommend-list-v1
+    :is(.video-page-card-small, .video-page-operator-card-small)
+    .pic-box :is(
+      .pic,
+      .framepreview-box,
+      .video-awesome-img,
+      .b-img,
+      .b-img__inner,
+      .bpx-docker-major,
+      .watch-later-video
+    ) {
+    border-radius: 0 !important;
+  }
+
+  .recommend-list-v1
+    :is(.video-page-card-small, .video-page-operator-card-small)
+    .pic-box .pic.loaded::before {
+    border-radius: 0 !important;
+  }
+
+  /* 清除原站预览层的定位与固定尺寸 */
+  .recommend-list-v1
+    :is(.video-page-card-small, .video-page-operator-card-small)
+    .pic-box :is(.framepreview-box, .video-awesome-img) {
+    inset: 0 !important;
+  }
+
+  .recommend-list-v1
+    :is(.video-page-card-small, .video-page-operator-card-small)
+    .pic-box :is(
+      .framepreview-box,
+      .video-awesome-img,
+      .b-img,
+      .b-img__inner,
+      .bpx-docker-major
+    ) {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* 信息列占满剩余宽度,播放数据与封面底边对齐 */
+  .recommend-list-v1
+    :is(.video-page-card-small, .video-page-operator-card-small)
+    .info {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    box-sizing: border-box !important;
+    width: calc(
+      100% - var(--bili-rec-cover-width) - var(--bili-rec-info-gap)
+    ) !important;
+    min-width: 0 !important;
+    height: var(--bili-rec-cover-height) !important;
+    margin-left: var(--bili-rec-info-gap) !important;
+  }
+
+  .recommend-list-v1
+    :is(.video-page-card-small, .video-page-operator-card-small)
+    .info .playinfo {
+    flex: 0 0 auto !important;
+    margin-top: auto !important;
+  }
+
+}
