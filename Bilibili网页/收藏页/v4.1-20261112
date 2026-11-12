@@ -481,7 +481,6 @@ main.space-main.route_favlist .favlist-main,
     white-space: nowrap;
   }
 
-  /* 防止"私密"标签因标题过长而换行。 */
   :is(.collection-m, .collection-m-exp)
     .content .group-list li label .count {
     margin-left: auto;
