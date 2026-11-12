@@ -1,0 +1,176 @@
+/* ==UserStyle==
+@name           Bilibili搜索页
+@namespace      local.bilibili.search
+@description    隐藏顶部导航与页脚，内容全宽，自定义视频列数，分页栏右侧竖排
+@version        1.1.0
+@preprocessor   default
+==/UserStyle== */
+
+@-moz-document domain("search.bilibili.com") {
+
+  /* ==================== 配置 ==================== */
+  #app {
+    --bbs-video-columns: 9;
+    --bbs-page-gutter: 10px;
+    --bbs-video-gap: 5px;
+    --bbs-pagination-width: 36px;
+    --bbs-pagination-height: 30px;
+    --bbs-pagination-gap: 5px;
+
+    margin-top: 0 !important;
+  }
+
+  /* ==================== 隐藏导航与页脚 ==================== */
+  #bili-header-container,
+  #biliMainHeader,
+  #biliMainFooter {
+    display: none !important;
+  }
+
+  /* ==================== 紧凑搜索头部 ==================== */
+  .search-layout .search-header .search-input {
+    margin: 5px 0 !important;
+  }
+
+  .search-layout .search-header .search-line {
+    margin-top: 0 !important;
+  }
+
+  .search-layout .search-header .search-conditions {
+    margin-top: 8px !important;
+  }
+
+  /* ==================== 内容区全宽 ==================== */
+  .search-layout,
+  .search-layout > div:not(.hide):not(.side-buttons-container),
+  .search-content,
+  .search-page-wrapper,
+  .search-page,
+  .search-page-all > div {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-inline: 0 !important;
+  }
+
+  /* 不影响回到顶部等悬浮按钮的容器。 */
+  .search-layout .search-header .i_wrapper,
+  .search-layout .search-content .i_wrapper {
+    width: 100% !important;
+    max-width: none !important;
+    margin-inline: 0 !important;
+    padding-inline: var(--bbs-page-gutter) !important;
+  }
+
+  /* ==================== 通用视频网格 ==================== */
+  :is(.search-page-all, .search-page-video) .video-list.row {
+    display: grid !important;
+    grid-template-columns:
+      repeat(var(--bbs-video-columns), minmax(0, 1fr)) !important;
+    gap: var(--bbs-video-gap) !important;
+    margin: 0 !important;
+  }
+
+  /* 清除原响应式列宽、Flex 比例及卡片间距。 */
+  :is(.search-page-all, .search-page-video) .video-list.row > * {
+    flex: none !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 第一页：包含 UP 主视频和主搜索结果。 */
+  .search-page-all .video-list.row {
+    width: 100% !important;
+  }
+
+  /* 后续页：视频网格占据分页栏左侧的剩余空间。 */
+  .search-page-video > .video-list.row {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+  }
+
+  /* ==================== 视频区与分页栏布局 ==================== */
+  .search-page-all > div:has(> .video.search-all-list),
+  .search-page-video {
+    display: flex !important;
+    align-items: stretch !important;
+    column-gap: 8px !important;
+  }
+
+  .search-page-all > div:has(> .video.search-all-list) {
+    flex-wrap: wrap !important;
+  }
+
+  .search-page-video {
+    flex-wrap: nowrap !important;
+  }
+
+  /* 第一页的广告、UP 主信息等模块仍独占一行。 */
+  .search-page-all > div > :is(.brand-ad-list, .user-list) {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+  }
+
+  .search-page-all > div > .video.search-all-list {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+  }
+
+  /* ==================== 右侧垂直分页栏 ==================== */
+  .search-page-all > div > .flex_center:has(> .vui_pagenation),
+  .search-page-video > .flex_center:has(> .vui_pagenation) {
+    flex: 0 0 var(--bbs-pagination-width) !important;
+    align-self: stretch !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: var(--bbs-pagination-width) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 第一页的分页栏在内容区外层，需要单独保留右侧留白。 */
+  .search-page-all > div > .flex_center:has(> .vui_pagenation) {
+    margin-right: var(--bbs-page-gutter) !important;
+  }
+
+  :is(.search-page-all, .search-page-video)
+    :is(.vui_pagenation, .vui_pagenation--btns) {
+    display: flex !important;
+    flex-flow: column nowrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: var(--bbs-pagination-gap) !important;
+    box-sizing: border-box !important;
+    width: var(--bbs-pagination-width) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  :is(.search-page-all, .search-page-video) .vui_pagenation--btn {
+    flex: none !important;
+    box-sizing: border-box !important;
+    width: var(--bbs-pagination-width) !important;
+    min-width: var(--bbs-pagination-width) !important;
+    height: var(--bbs-pagination-height) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  :is(.search-page-all, .search-page-video) .vui_pagenation--extend {
+    width: 100% !important;
+    height: var(--bbs-pagination-height) !important;
+    line-height: var(--bbs-pagination-height) !important;
+    text-align: center !important;
+  }
+
+  :is(.search-page-all, .search-page-video) .vui_pagenation--btn-side {
+    display: none !important;
+  }
+}
