@@ -1,4 +1,13 @@
 /* ===== 视频区右侧：垂直分页栏 ===== */
+
+/* 清除各层容器的右侧留白，让分页栏贴齐页面右缘。 */
+main.space-main.route_favlist,
+main.space-main.route_favlist > .space-favlist,
+main.space-main.route_favlist .favlist-main {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+}
+
 .fav-list-main {
     --pagination-width: 36px;
     --pagination-control-height: 30px;
@@ -28,7 +37,7 @@
     min-width: 0 !important;
 }
 
-/* 分页栏贴齐内容容器右缘。 */
+/* 分页栏固定在 flex 行尾。 */
 .fav-list-main > .card-pagenation {
     flex: 0 0 var(--pagination-width) !important;
     align-self: stretch !important;
@@ -41,18 +50,23 @@
     padding: 0 !important;
 }
 
-/* 隐藏上一页、下一页及页码与视频数量统计信息。 */
+/* 隐藏上一页、下一页及统计信息。 */
 .card-pagenation .vui_pagenation--btn-side,
 .card-pagenation .vui_pagenation-go__count {
     display: none !important;
 }
 
-/* 页码按钮纵向紧凑排列。 */
-.card-pagenation .vui_pagenation--btns {
+/* 页码与跳页控件使用相同的宽度、轴线和间距。 */
+.card-pagenation
+    :is(.vui_pagenation--btns, .vui_pagenation-go) {
     display: flex !important;
     flex-flow: column nowrap !important;
     align-items: center !important;
+    box-sizing: border-box !important;
     gap: var(--pagination-gap) !important;
+    width: var(--pagination-width) !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .card-pagenation .vui_pagenation--btn {
@@ -64,24 +78,16 @@
     padding: 0 !important;
 }
 
-/* 跳页控件与页码按钮同宽、同轴对齐。 */
-.card-pagenation .vui_pagenation-go {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    gap: var(--pagination-gap) !important;
-    width: var(--pagination-width) !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
+/* 跳页输入框与数字页码保持相同尺寸。 */
 .card-pagenation .vui_pagenation-go
     :is(.vui_input, .vui_input-wrapper) {
+    flex: none !important;
     box-sizing: border-box !important;
     width: var(--pagination-width) !important;
     min-width: 0 !important;
     height: var(--pagination-control-height) !important;
     margin: 0 !important;
+    padding: 0 !important;
 }
 
 .card-pagenation .vui_pagenation-go input {
@@ -95,8 +101,9 @@
 }
 
 .card-pagenation .vui_pagenation-go__page {
-    width: 100%;
-    margin: 0;
+    align-self: center !important;
+    width: 100% !important;
+    margin: 0 !important;
     line-height: 1;
     text-align: center;
 }
