@@ -1,85 +1,102 @@
 /* ===== 视频区右侧：垂直分页栏 ===== */
 .fav-list-main {
+    --pagination-width: 36px;
+    --pagination-control-height: 30px;
+    --pagination-gap: 4px;
+
     display: flex !important;
     flex-wrap: wrap !important;
     align-items: stretch !important;
-    column-gap: 12px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+    column-gap: 8px !important;
 }
 
-/* 排序与搜索栏仍独占一行 */
+/* 排序与搜索栏独占一行。 */
 .fav-list-main > .fav-list-header {
     flex: 0 0 100% !important;
     width: 100% !important;
 }
 
-/* 视频网格占据分页栏左侧的剩余空间 */
+/* 视频网格占据分页栏左侧的剩余空间。 */
 .fav-list-main > .items {
     flex: 1 1 0 !important;
     width: auto !important;
     min-width: 0 !important;
 }
 
-/* 分页栏固定在视频内容区右侧 */
+/* 分页栏贴齐内容容器右缘。 */
 .fav-list-main > .card-pagenation {
-    flex: 0 0 64px !important;
+    flex: 0 0 var(--pagination-width) !important;
     align-self: stretch !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
     align-items: center !important;
-    gap: 8px !important;
-    margin: 0 !important;
+    gap: var(--pagination-gap) !important;
+    margin: 0 0 0 auto !important;
     padding: 0 !important;
 }
 
-/* 页码按钮改为纵向排列 */
+/* 隐藏上一页、下一页及页码与视频数量统计信息。 */
+.card-pagenation .vui_pagenation--btn-side,
+.card-pagenation .vui_pagenation-go__count {
+    display: none !important;
+}
+
+/* 页码按钮纵向紧凑排列。 */
 .card-pagenation .vui_pagenation--btns {
     display: flex !important;
     flex-flow: column nowrap !important;
     align-items: center !important;
-    gap: 4px !important;
+    gap: var(--pagination-gap) !important;
 }
 
-/* 统一数字页码按钮尺寸 */
 .card-pagenation .vui_pagenation--btn {
     flex: none !important;
-    width: 36px !important;
-    min-width: 36px !important;
-    height: 30px !important;
+    width: var(--pagination-width) !important;
+    min-width: var(--pagination-width) !important;
+    height: var(--pagination-control-height) !important;
     margin: 0 !important;
     padding: 0 !important;
 }
 
-/* “上一页”和“下一页”稍宽 */
-.card-pagenation .vui_pagenation--btn-side {
-    width: 56px !important;
-}
-
-/* 跳页控件纵向排列 */
+/* 跳页控件与页码按钮同宽、同轴对齐。 */
 .card-pagenation .vui_pagenation-go {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: var(--pagination-gap) !important;
+    width: var(--pagination-width) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.card-pagenation .vui_pagenation-go
+    :is(.vui_input, .vui_input-wrapper) {
+    box-sizing: border-box !important;
+    width: var(--pagination-width) !important;
+    min-width: 0 !important;
+    height: var(--pagination-control-height) !important;
     margin: 0 !important;
 }
 
-.card-pagenation .vui_pagenation-go__count {
-    width: 64px;
-    font-size: 12px;
-    line-height: 1.5;
-    text-align: center;
-    white-space: normal !important;
-}
-
-/* 缩小页码输入框以适应侧栏 */
-.card-pagenation .vui_pagenation-go .vui_input,
-.card-pagenation .vui_pagenation-go .vui_input-wrapper,
 .card-pagenation .vui_pagenation-go input {
-    width: 44px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
     min-width: 0 !important;
+    height: var(--pagination-control-height) !important;
+    margin: 0 !important;
+    padding: 0 4px !important;
+    text-align: center;
 }
 
-.card-pagenation .vui_pagenation-go input {
+.card-pagenation .vui_pagenation-go__page {
+    width: 100%;
+    margin: 0;
+    line-height: 1;
     text-align: center;
 }
