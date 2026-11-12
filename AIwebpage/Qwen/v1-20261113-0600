@@ -1,0 +1,665 @@
+// ==UserScript==
+// @name         Qwen网页阅览
+// @namespace    local.qwen.reading.tuner
+// @version      2.0
+// @description  集中管理 Qwen 的阅读排版、页面背景、留白透明度、圆角及右下角按钮布局
+// @match        https://chat.qwen.ai/*
+// @grant        none
+// @run-at       document-idle
+// ==/UserScript==
+
+(function () {
+  'use strict';
+
+  // ===== 外观配置：修改数值并保存脚本即可 =====
+  const APPEARANCE = Object.freeze({
+    backgroundColor: '#171717', // 页面背景色，支持 #RGB 或 #RRGGBB
+    backdropColor: '#222222', // 对话区及输入区两侧的留白遮罩色
+    backdropOpacity: 0, // 留白遮罩不透明度：0～1，0 为全透明
+    cornerRadius: 0, // 界面圆角半径（px）
+    controlButtonSize: 36, // 返回底部与阅读调节按钮的正方形边长（px）
+    controlButtonGap: 8, // 两个按钮的水平间距（px）
+    controlButtonRight: 16, // 阅读调节按钮距视口右侧（px）
+    controlButtonBottom: 16, // 两个按钮距视口底部（px）
+    controlIconSize: 16, // 两个按钮的图标尺寸（px）
+  });
+
+  // ===== 阅读配置 =====
+  const STORAGE_KEY = 'qwen-reading-tuner';
+  const SCAN_DELAY = 300;
+  const READING_DEFAULTS = Object.freeze({
+    width: 900,
+    space: 12,
+    density: 0,
+    letter: 0,
+    font: 16,
+  });
+
+  // 数组顺序即面板顺序：行宽 → 行间距 → 阅读密度 → 字间距 → 字号。
+  const CONTROL_DEFINITIONS = Object.freeze([
+    { key: 'width', label: '行宽', min: 500, max: 2400, step: 20 },
+    { key: 'space', label: '行间距', min: -10, max: 48, step: 1 },
+    { key: 'density', label: '阅读密度', min: 0, max: 100, step: 1 },
+    { key: 'letter', label: '字间距', min: -1, max: 5, step: 0.1 },
+    { key: 'font', label: '字号', min: 12, max: 32, step: 1 },
+  ]);
+
+  // ===== 页面选择器 =====
+  const HIDDEN_SELECTOR = [
+    '.my-library-head',
+    '.sidebar-entry-list',
+    '.chat-container-statement',
+    '.member-upgrade-button',
+  ].join(', ');
+
+  // 仅清理布局背景和遮罩，不改变消息、输入框或侧栏自身背景。
+  const LAYOUT_BACKGROUND_SELECTOR = `
+    #root,
+    .app,
+    .desktop-layout,
+    .desktop-layout-content,
+    .desktop-layout-content-inner,
+    .desktop-layout-content-chat-panel,
+    .chat-page-container,
+    .chat-page-container .layout-main,
+    .splitter-container,
+    .splitter-container-left-panel,
+    .layout-main-chat-panel,
+    .main-content,
+    .chat-layout,
+    .chat-content,
+    .chat-left-panel,
+    .chat-left,
+    .chat-messages-container,
+    .chat-messages,
+    .chat-container,
+    .chat-layout-input-container,
+    .chat-layout-input-container > div,
+    .agent-mode-feedback-gate,
+    .agent-mode-feedback-gate-input,
+    .agent-mode-feedback-gate-input > div,
+    .message-input-wrapper,
+    .chat-message-input-fixed,
+    .chat-message-input-fixed-container,
+    .home-page-layout-main
+  `;
+
+  // 两侧留白也可能由伪元素渐变或遮罩产生，必须与容器同步处理。
+  const BACKDROP_PSEUDO_SELECTOR = [
+    '.chat-left::before',
+    '.chat-left::after',
+    '.chat-messages::before',
+    '.chat-messages::after',
+    '.chat-layout-input-container::before',
+    '.chat-layout-input-container::after',
+    '.agent-mode-feedback-gate::before',
+    '.agent-mode-feedback-gate::after',
+    '.agent-mode-feedback-gate-input::before',
+    '.agent-mode-feedback-gate-input::after',
+    '.message-input-wrapper::before',
+    '.message-input-wrapper::after',
+  ].join(', ');
+
+  const ASSISTANT_SELECTOR = '.qwen-chat-message:not(.qwen-chat-message-user)';
+  const TEXT_SKIP_SELECTOR = 'nav, aside, textarea, [role="dialog"], [role="menu"], #rt-panel, pre, code';
+  const NO_TEXT_SELECTOR = 'button, [role="button"], pre, code, svg, textarea, input, #rt-panel';
+  const DENSITY_SKIP_SELECTOR = 'pre, code, td, th, table, .katex, .katex-display, mjx-container, svg, canvas, iframe, [role="dialog"], [role="menu"], #rt-panel';
+
+  // 阅读密度参考 Roomy（MIT License，Copyright (c) 2025 Sk1ty）。
+  // https://github.com/Planetes1mal/roomy
+  let settings = loadSettings();
+  const processedTextElements = new WeakSet();
+  const styleElement = document.createElement('style');
+  document.head.appendChild(styleElement);
+
+  // ===== 通用工具 =====
+  function debounce(callback, delay) {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => callback(...args), delay);
+    };
+  }
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function normalizeColor(value, fallback) {
+    if (typeof value !== 'string') return fallback;
+    if (/^#[0-9a-f]{6}$/i.test(value)) return value;
+    if (/^#[0-9a-f]{3}$/i.test(value)) {
+      return '#' + value.slice(1).split('').map((char) => char + char).join('');
+    }
+    return fallback;
+  }
+
+  function getBackdropColor() {
+    const opacity = clamp(APPEARANCE.backdropOpacity, 0, 1);
+    if (opacity === 0) return 'transparent';
+
+    const hex = normalizeColor(APPEARANCE.backdropColor, '#222222').slice(1);
+    const red = parseInt(hex.slice(0, 2), 16);
+    const green = parseInt(hex.slice(2, 4), 16);
+    const blue = parseInt(hex.slice(4, 6), 16);
+    return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
+  }
+
+  function loadSettings() {
+    const loaded = { ...READING_DEFAULTS };
+
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      for (const { key, min, max } of CONTROL_DEFINITIONS) {
+        if (typeof saved[key] === 'number' && Number.isFinite(saved[key])) {
+          loaded[key] = clamp(saved[key], min, max);
+        }
+      }
+    } catch (error) {
+      // 存储不可用或数据损坏时，使用默认设置。
+    }
+
+    return loaded;
+  }
+
+  function saveSettings() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    } catch (error) {
+      // 存储受限时，仍保留当前页面内的调节效果。
+    }
+
+    renderStyles();
+    updateFontScales();
+    scanPage();
+  }
+
+  function getCornerDeclarations() {
+    const radius = Math.max(0, APPEARANCE.cornerRadius) + 'px';
+    return `
+      border-radius: ${radius} !important;
+      border-start-start-radius: ${radius} !important;
+      border-start-end-radius: ${radius} !important;
+      border-end-start-radius: ${radius} !important;
+      border-end-end-radius: ${radius} !important;
+    `;
+  }
+
+  // ===== 页面样式 =====
+  function renderStyles() {
+    const densityProgress = clamp(settings.density, 0, 100) / 100;
+    const densitySpaceScale = 1 - 0.875 * densityProgress;
+    const backgroundColor = normalizeColor(APPEARANCE.backgroundColor, '#171717');
+    const backdropColor = getBackdropColor();
+    const buttonSize = Math.max(24, APPEARANCE.controlButtonSize);
+    const buttonGap = Math.max(0, APPEARANCE.controlButtonGap);
+    const buttonRight = Math.max(0, APPEARANCE.controlButtonRight);
+    const buttonBottom = Math.max(0, APPEARANCE.controlButtonBottom);
+    const iconSize = Math.max(12, APPEARANCE.controlIconSize);
+
+    styleElement.textContent = `
+      :root {
+        --rt-density: ${densityProgress};
+        --rt-space-scale: ${densitySpaceScale};
+        --rt-control-size: ${buttonSize}px;
+        --rt-control-gap: ${buttonGap}px;
+        --rt-control-right: ${buttonRight}px;
+        --rt-control-bottom: ${buttonBottom}px;
+        --rt-icon-size: ${iconSize}px;
+      }
+
+      /* 页面底层背景；聊天页和新建对话页共用。 */
+      html, body {
+        background-color: ${backgroundColor} !important;
+        background-image: none !important;
+      }
+
+      /* 留白透明度仅改变背景，不改变内容元素的不透明度。 */
+      ${LAYOUT_BACKGROUND_SELECTOR} {
+        background: ${backdropColor} !important;
+      }
+      ${BACKDROP_PSEUDO_SELECTOR} {
+        background: ${backdropColor} !important;
+      }
+
+      ${HIDDEN_SELECTOR} {
+        display: none !important;
+      }
+
+      /* 圆角半径由顶部 APPEARANCE.cornerRadius 统一控制。 */
+      #root, #root *, #root *::before, #root *::after,
+      #rt-btn, #rt-panel, #rt-panel *, #rt-panel *::before, #rt-panel *::after {
+        ${getCornerDeclarations()}
+      }
+      #root::-webkit-scrollbar, #root *::-webkit-scrollbar,
+      #root::-webkit-scrollbar-track, #root *::-webkit-scrollbar-track,
+      #root::-webkit-scrollbar-thumb, #root *::-webkit-scrollbar-thumb,
+      #root::-webkit-scrollbar-button, #root *::-webkit-scrollbar-button {
+        border-radius: ${Math.max(0, APPEARANCE.cornerRadius)}px !important;
+      }
+
+      /* 行宽。 */
+      .qwen-chat-message {
+        width: 100% !important;
+        max-width: min(${settings.width}px, 100%) !important;
+      }
+      [data-rt-box] {
+        width: 100% !important;
+        max-width: min(${settings.width}px, 100%) !important;
+      }
+
+      /* 行间距、字间距与字号。 */
+      [data-rt-text] {
+        margin-bottom: ${settings.space}px !important;
+        letter-spacing: ${settings.letter}px !important;
+        font-size: ${settings.font}px !important;
+      }
+
+      /* 阅读密度只压缩正文；代码、表格和公式不标记为密度目标。 */
+      [data-rt-density] {
+        margin-bottom: calc(${settings.space}px * var(--rt-space-scale)) !important;
+        line-height: calc(
+          (var(--rt-native-line) - var(--rt-line-cut, 0px) * var(--rt-density)) *
+          var(--rt-font-scale, 1)
+        ) !important;
+        margin-top: min(
+          var(--rt-native-mt, 0px),
+          calc(var(--rt-native-mt, 0px) * var(--rt-space-scale))
+        ) !important;
+      }
+
+      /* 两个右下角按钮：同底边、同尺寸、同视觉样式。 */
+      #rt-btn, #root .scroll-down-button {
+        box-sizing: border-box !important;
+        width: var(--rt-control-size) !important;
+        min-width: var(--rt-control-size) !important;
+        max-width: var(--rt-control-size) !important;
+        height: var(--rt-control-size) !important;
+        min-height: var(--rt-control-size) !important;
+        max-height: var(--rt-control-size) !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: 1px solid #8884 !important;
+        background: #fffd !important;
+        color: #333 !important;
+        box-shadow: 0 2px 8px #0003 !important;
+        cursor: pointer;
+      }
+      #rt-btn {
+        position: fixed;
+        right: var(--rt-control-right);
+        bottom: var(--rt-control-bottom);
+        z-index: 100000;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font: 400 var(--rt-icon-size)/1 system-ui, sans-serif;
+      }
+      #root .scroll-down-button {
+        position: fixed !important;
+        top: auto !important;
+        right: calc(var(--rt-control-right) + var(--rt-control-size) + var(--rt-control-gap)) !important;
+        bottom: var(--rt-control-bottom) !important;
+        left: auto !important;
+        transform: none !important;
+        align-items: center;
+        justify-content: center;
+        z-index: 100000;
+        pointer-events: auto;
+      }
+      #rt-btn .rt-btn-icon,
+      #root .scroll-down-button .scroll-down-button-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        width: var(--rt-icon-size) !important;
+        height: var(--rt-icon-size) !important;
+        font-size: var(--rt-icon-size) !important;
+        line-height: 1 !important;
+        color: inherit;
+      }
+      #root .scroll-down-button .scroll-down-button-icon svg {
+        display: block;
+        width: var(--rt-icon-size) !important;
+        height: var(--rt-icon-size) !important;
+      }
+
+      /* 阅读调节面板。 */
+      #rt-panel {
+        position: fixed;
+        right: var(--rt-control-right);
+        bottom: calc(var(--rt-control-bottom) + var(--rt-control-size) + var(--rt-control-gap));
+        z-index: 100001;
+        width: 250px;
+        padding: 12px 14px;
+        background: #fffe;
+        color: #222;
+        border: 1px solid #8884;
+        box-shadow: 0 4px 16px #0003;
+        font: 13px/1.4 system-ui, sans-serif;
+        display: none;
+        backdrop-filter: blur(6px);
+      }
+      #rt-panel.open { display: block; }
+      #rt-panel label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 8px;
+      }
+      #rt-panel input[type="range"] { width: 100%; }
+      #rt-actions { display: flex; gap: 6px; margin-top: 10px; }
+      #rt-actions button { cursor: pointer; }
+      #rt-diag {
+        display: none;
+        width: 100%;
+        height: 120px;
+        margin-top: 8px;
+        font: 11px/1.3 monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        #rt-btn, #root .scroll-down-button {
+          background: #333d !important;
+          color: #eee !important;
+        }
+        #rt-panel { background: #2a2a2ae8; color: #eee; }
+      }
+    `;
+  }
+
+  // CSS 负责伪元素；内联高优先级样式负责覆盖站点或深色插件的动态背景。
+  function applyAppearance() {
+    const backdropColor = getBackdropColor();
+    const backgroundColor = normalizeColor(APPEARANCE.backgroundColor, '#171717');
+
+    document.querySelectorAll(LAYOUT_BACKGROUND_SELECTOR).forEach((element) => {
+      element.style.setProperty('background', backdropColor, 'important');
+    });
+    [document.documentElement, document.body].forEach((element) => {
+      element.style.setProperty('background-color', backgroundColor, 'important');
+      element.style.setProperty('background-image', 'none', 'important');
+    });
+  }
+
+  // ===== 正文标记与阅读密度 =====
+  function markWidthAncestors(element) {
+    let ancestor = element.parentElement;
+
+    while (ancestor && ancestor !== document.body) {
+      const maxWidth = getComputedStyle(ancestor).maxWidth;
+      if (maxWidth !== 'none' && maxWidth !== '100%') {
+        ancestor.setAttribute('data-rt-box', '1');
+      }
+      ancestor = ancestor.parentElement;
+    }
+  }
+
+  function collectTextElements() {
+    const elements = new Set(document.querySelectorAll('p, li, blockquote'));
+
+    document.querySelectorAll(ASSISTANT_SELECTOR + ' *').forEach((element) => {
+      if (element.closest(NO_TEXT_SELECTOR)) return;
+      const hasDirectText = Array.from(element.childNodes).some(
+        (node) => node.nodeType === 3 && node.textContent.trim()
+      );
+      if (!hasDirectText) return;
+
+      const display = getComputedStyle(element).display;
+      if (display === 'block' || display === 'list-item') elements.add(element);
+    });
+
+    return [...elements].filter((element) => (
+      !processedTextElements.has(element) && !element.closest(TEXT_SKIP_SELECTOR)
+    ));
+  }
+
+  function measureAndMarkText(elements) {
+    if (!elements.length) return;
+
+    // 暂停本脚本样式，确保记录网站原始排版，而非上一次调节后的数值。
+    const sheet = styleElement.sheet;
+    if (sheet) sheet.disabled = true;
+
+    let metrics;
+    try {
+      metrics = elements.map((element) => {
+        const style = getComputedStyle(element);
+        return {
+          element,
+          fontSize: Number.parseFloat(style.fontSize),
+          lineHeight: Number.parseFloat(style.lineHeight),
+          marginTop: Number.parseFloat(style.marginTop),
+        };
+      });
+    } finally {
+      if (sheet) sheet.disabled = false;
+    }
+
+    for (const { element, fontSize, lineHeight, marginTop } of metrics) {
+      if (fontSize > 0) {
+        element.style.setProperty('--rt-native-font', `${fontSize}px`);
+        element.style.setProperty('--rt-font-scale', String(settings.font / fontSize));
+      }
+
+      if (fontSize > 0 && lineHeight > 0 && !element.closest(DENSITY_SKIP_SELECTOR)) {
+        const minimumLineHeight = Math.max(fontSize * 1.15, lineHeight * 0.82);
+        const targetLineHeight = Math.min(lineHeight, minimumLineHeight);
+        element.style.setProperty('--rt-native-line', `${lineHeight}px`);
+        element.style.setProperty('--rt-line-cut', `${Math.max(0, lineHeight - targetLineHeight)}px`);
+        element.style.setProperty('--rt-native-mt', `${Number.isFinite(marginTop) ? marginTop : 0}px`);
+        element.setAttribute('data-rt-density', '');
+      }
+
+      processedTextElements.add(element);
+      element.setAttribute('data-rt-text', '1');
+      markWidthAncestors(element);
+    }
+  }
+
+  function updateFontScales() {
+    document.querySelectorAll('[data-rt-text]').forEach((element) => {
+      const nativeFont = Number.parseFloat(element.style.getPropertyValue('--rt-native-font'));
+      if (nativeFont > 0) {
+        element.style.setProperty('--rt-font-scale', String(settings.font / nativeFont));
+      }
+    });
+  }
+
+  function scanPage() {
+    measureAndMarkText(collectTextElements());
+    applyAppearance();
+  }
+
+  // ===== 阅读调节面板 =====
+  function formatValue(key, value) {
+    return key === 'density' ? `${value}%` : `${value}px`;
+  }
+
+  function createControl({ key, label, min, max, step }) {
+    const container = document.createElement('div');
+    container.className = 'rt-control';
+
+    const labelElement = document.createElement('label');
+    labelElement.htmlFor = `rt-${key}`;
+
+    const labelText = document.createElement('span');
+    labelText.textContent = label;
+
+    const valueText = document.createElement('span');
+    valueText.dataset.valueFor = key;
+
+    const input = document.createElement('input');
+    input.type = 'range';
+    input.id = `rt-${key}`;
+    input.min = String(min);
+    input.max = String(max);
+    input.step = String(step);
+    input.dataset.setting = key;
+
+    labelElement.append(labelText, valueText);
+    container.append(labelElement, input);
+    return container;
+  }
+
+  function createPanel() {
+    const panelElement = document.createElement('div');
+    panelElement.id = 'rt-panel';
+    panelElement.setAttribute('aria-label', '阅读调节');
+
+    CONTROL_DEFINITIONS.forEach((definition) => {
+      panelElement.appendChild(createControl(definition));
+    });
+
+    const actions = document.createElement('div');
+    actions.id = 'rt-actions';
+
+    const resetButton = document.createElement('button');
+    resetButton.type = 'button';
+    resetButton.id = 'rt-reset';
+    resetButton.textContent = '重置';
+
+    const diagnoseButton = document.createElement('button');
+    diagnoseButton.type = 'button';
+    diagnoseButton.id = 'rt-diag-btn';
+    diagnoseButton.textContent = '诊断';
+
+    const diagnostics = document.createElement('textarea');
+    diagnostics.id = 'rt-diag';
+    diagnostics.readOnly = true;
+
+    actions.append(resetButton, diagnoseButton);
+    panelElement.append(actions, diagnostics);
+    return panelElement;
+  }
+
+  function createToggleButton() {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.id = 'rt-btn';
+    button.title = '阅读调节';
+    button.setAttribute('aria-label', '阅读调节');
+
+    const icon = document.createElement('span');
+    icon.className = 'rt-btn-icon';
+    icon.textContent = 'Aa';
+    button.appendChild(icon);
+
+    button.setAttribute('aria-controls', 'rt-panel');
+    button.setAttribute('aria-expanded', 'false');
+    return button;
+  }
+
+  const panel = createPanel();
+  const toggleButton = createToggleButton();
+
+  function syncPanel() {
+    for (const { key } of CONTROL_DEFINITIONS) {
+      panel.querySelector(`#rt-${key}`).value = settings[key];
+      panel.querySelector(`[data-value-for="${key}"]`).textContent = formatValue(key, settings[key]);
+    }
+  }
+
+  function handlePanelInput(event) {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement)) return;
+
+    const key = input.dataset.setting;
+    if (!Object.hasOwn(READING_DEFAULTS, key)) return;
+
+    settings[key] = Number.parseFloat(input.value);
+    syncPanel();
+    saveSettings();
+  }
+
+  function resetSettings() {
+    settings = { ...READING_DEFAULTS };
+    syncPanel();
+    saveSettings();
+  }
+
+  function togglePanel() {
+    const isOpen = panel.classList.toggle('open');
+    toggleButton.setAttribute('aria-expanded', String(isOpen));
+  }
+
+  // ===== 诊断 =====
+  function describe(element) {
+    const style = getComputedStyle(element);
+    const className = (element.className && element.className.toString().trim().replace(/\s+/g, '.')) || '';
+    const inlineStyle = (element.getAttribute('style') || '').slice(0, 80);
+
+    return [
+      element.tagName.toLowerCase() + (className ? '.' + className : ''),
+      'mw=' + style.maxWidth,
+      'w=' + style.width,
+      'rect=' + Math.round(element.getBoundingClientRect().width),
+      'pad=' + style.paddingLeft + '/' + style.paddingRight,
+      'disp=' + style.display,
+      element.hasAttribute('data-rt-box') ? 'MARKED' : '',
+      inlineStyle ? `style="${inlineStyle}"` : '',
+    ].filter(Boolean).join(' | ');
+  }
+
+  function diagnose() {
+    const textElements = [...document.querySelectorAll('[data-rt-text]')];
+    const targets = textElements.slice(-2);
+    const lines = ['window=' + window.innerWidth];
+
+    targets.forEach((element, index) => {
+      lines.push(`--- 段落 ${index + 1}: ${element.textContent.slice(0, 20)}`);
+      let ancestor = element;
+      let guard = 0;
+      while (ancestor && ancestor !== document.body && guard++ < 25) {
+        lines.push(describe(ancestor));
+        ancestor = ancestor.parentElement;
+      }
+    });
+
+    const messages = document.querySelectorAll(ASSISTANT_SELECTOR);
+    const lastMessage = messages[messages.length - 1];
+    lines.push(`=== 回答区结构 (${messages.length} 条回答) ===`);
+
+    if (lastMessage) {
+      lines.push(describe(lastMessage));
+      let count = 0;
+      (function walk(element, depth) {
+        for (const child of element.children) {
+          if (count++ > 80 || depth > 7) return;
+          const className = (child.className && child.className.toString().trim().replace(/\s+/g, '.')) || '';
+          const text = Array.from(child.childNodes)
+            .filter((node) => node.nodeType === 3 && node.textContent.trim())
+            .map((node) => node.textContent.trim().slice(0, 8))[0];
+          lines.push(
+            '  '.repeat(depth) + child.tagName.toLowerCase() + (className ? '.' + className.slice(0, 70) : '') +
+            ` [${getComputedStyle(child).display}${child.hasAttribute('data-rt-text') ? ',T' : ''}]` +
+            (text ? ` "${text}"` : '')
+          );
+          walk(child, depth + 1);
+        }
+      })(lastMessage, 1);
+    }
+
+    const output = lines.join('\n');
+    const diagnostics = panel.querySelector('#rt-diag');
+    diagnostics.style.display = 'block';
+    diagnostics.value = output;
+    diagnostics.select();
+    try { document.execCommand('copy'); } catch (error) {}
+    console.log(output);
+  }
+
+  panel.addEventListener('input', handlePanelInput);
+  panel.querySelector('#rt-reset').addEventListener('click', resetSettings);
+  panel.querySelector('#rt-diag-btn').addEventListener('click', diagnose);
+  toggleButton.addEventListener('click', togglePanel);
+
+  // ===== 页面监听与初始化 =====
+  const pageObserver = new MutationObserver(debounce(scanPage, SCAN_DELAY));
+  pageObserver.observe(document.body, { childList: true, subtree: true });
+
+  document.body.append(toggleButton, panel);
+  renderStyles();
+  syncPanel();
+  scanPage();
+})();
