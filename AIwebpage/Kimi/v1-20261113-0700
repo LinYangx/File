@@ -2,7 +2,7 @@
 // @name         Kimi 网页阅览
 // @namespace    local.kimi.reading.tuner
 // @version      1.6
-// @description  调节 Kimi 阅读排版与阅读密度，统一悬浮按钮和界面样式，压缩输入区间距，并隐藏指定元素及悬停提示
+// @description  调节Kimi阅读排版与阅读密度，统一悬浮按钮和界面样式，压缩输入区间距，并隐藏指定元素及悬停提示
 // @match        https://www.kimi.com/*
 // @match        https://kimi.com/*
 // @grant        none
