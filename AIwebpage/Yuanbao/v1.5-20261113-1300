@@ -1,0 +1,883 @@
+// ==UserScript==
+// @name         元宝网页阅览
+// @namespace    local.yuanbao.reading.tuner
+// @version      1.4.1
+// @description  调节 AI 回复排版与输入区布局；统一悬浮按钮，修补暗色模式并隐藏指定入口
+// @match        https://yuanbao.tencent.com/*
+// @grant        none
+// @noframes
+// @run-at       document-idle
+// ==/UserScript==
+
+// 安装：Tampermonkey → 添加新脚本 → 粘贴全部内容 → 保存，然后刷新元宝页面。
+// 若元宝改版导致调节失效，可打开面板点“诊断”，把输出内容用于排查选择器。
+
+(function () {
+  'use strict';
+
+  // ======================= 布局微调（直接修改数值） =======================
+  const LAYOUT = Object.freeze({
+    cornerRadius: 0, // 全局圆角：0 为方角；需要圆角时改为所需 px 数值
+    inputBottomSpace: 16, // 输入框下方预留：原生约 40；越小，输入框越靠下
+    inputPaddingY: 8, // 输入框上、下内边距：原生为 16
+    inputContentGap: 4, // 文本输入区与下方工具栏之间的间距：原生为 16
+    editorTopPadding: 10, // 文本输入区顶部留白（padding-top）
+    editorTopMargin: 0, // 文本输入区上间距（margin-top）
+    toolbarPaddingTop: 10, // 下方工具栏上留白
+    toolbarPaddingBottom: 0, // 下方工具栏下留白
+    controlSize: 40, // “返回至底部”和“阅读调节”按钮的正方形边长
+    controlIconSize: 18, // 两按钮内部图标的正方形边长
+    controlGap: 8, // 两按钮之间的横向间距
+    controlRight: 18, // 阅读调节按钮距窗口右侧的距离
+    controlBottom: 18, // 两按钮距窗口底部的距离
+  });
+
+  // ======================= 阅读设置 =======================
+  const STORAGE_KEY = 'yuanbao-reading-tuner';
+  const DEFAULT_READING = Object.freeze({
+    width: 960,
+    space: 16,
+    density: 0,
+    letter: 0,
+    font: 16,
+  });
+  const READING_RANGES = Object.freeze({
+    width: { min: 480, max: 2000, step: 20 },
+    space: { min: 0, max: 48, step: 1 },
+    density: { min: 0, max: 100, step: 1 },
+    letter: { min: -1, max: 5, step: 0.1 },
+    font: { min: 12, max: 32, step: 1 },
+  });
+  const READING_LABELS = Object.freeze({
+    width: '行宽',
+    space: '行间距',
+    density: '阅读密度',
+    letter: '字间距',
+    font: '字号',
+  });
+  const READING_KEYS = Object.keys(DEFAULT_READING);
+
+  // ======================= 页面选择器 =======================
+  const SELECTORS = Object.freeze({
+    inputCard: '[data-new-input-card], .new-framework-input_searchContent__YopMv',
+    inputOuter: '.agent-dialogue__content--common__input__content > div:has(> #searchbar-editor)',
+    editorArea: '[data-input-editor-area="true"]',
+    inputToolbar: '[data-input-bottom-toolbar="true"]',
+    markdown: ':is(.agent-chat__bubble, .agent-chat__conv--ai) .hyc-common-markdown-style',
+    aiContent: ':is(.agent-chat__bubble--ai, .agent-chat__conv--ai)',
+  });
+
+  // “返回至底部”通常只在向上滚动后动态出现；同时兼容无障碍名称、常见类名和纯图标按钮。
+  const SCROLL_BOTTOM_ICON_SELECTOR = '.icon-yb-ic_arrow_down_16';
+  const SCROLL_BOTTOM_SELECTOR = [
+    '[aria-label*="底部"]',
+    '[title*="底部"]',
+    '[aria-label="Scroll to bottom" i]',
+    '[title="Scroll to bottom" i]',
+    '[class*="scroll-to-bottom" i]',
+    '[class*="scrolltobottom" i]',
+    '[class*="back-to-bottom" i]',
+    '[class*="backtobottom" i]',
+    '[data-testid*="scroll-to-bottom" i]',
+    SCROLL_BOTTOM_ICON_SELECTOR,
+  ].join(', ');
+
+  const HOST_ID = 'yuanbao-reading-tuner-host';
+  const PAGE_STYLE_ID = 'yuanbao-reading-tuner-style';
+  const SCROLL_BOTTOM_CLASS = 'yb-reader-scroll-bottom';
+  const OWN_KEYS = new Set(READING_KEYS);
+
+  let reading = loadReading();
+  let pageStyle = null;
+  let domSyncScheduled = false;
+  let nativeScrollBottomControl = null;
+
+  const panelState = {
+    host: null,
+    shadow: null,
+    panel: null,
+    back: null,
+    fab: null,
+    diag: null,
+  };
+
+  function clampReading(key, value) {
+    const range = READING_RANGES[key];
+    const fallback = DEFAULT_READING[key];
+    const numeric = Number(value);
+    const safeValue = Number.isFinite(numeric) ? numeric : fallback;
+    const clamped = Math.min(range.max, Math.max(range.min, safeValue));
+    const digits = range.step < 1 ? 1 : 0;
+    return Number((Math.round(clamped / range.step) * range.step).toFixed(digits));
+  }
+
+  function loadReading() {
+    let saved = {};
+    try {
+      saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {};
+    } catch {
+      // 本地存储不可用或数据损坏时，使用默认设置。
+    }
+
+    return Object.fromEntries(READING_KEYS.map((key) => [
+      key,
+      clampReading(key, Object.hasOwn(saved, key) ? saved[key] : DEFAULT_READING[key]),
+    ]));
+  }
+
+  function getReadingMetrics() {
+    const density = reading.density / 100;
+    const compressLine = (base) => {
+      const target = Math.min(base, Math.max(1.15, base * 0.82));
+      return Number((base - (base - target) * density).toFixed(4));
+    };
+
+    return {
+      spaceScale: Number((1 - 0.875 * density).toFixed(4)),
+      bodyLine: compressLine(1.7),
+      titleLine: compressLine(1.25),
+    };
+  }
+
+  function buildPageCss() {
+    const { width, space, letter, font } = reading;
+    const { spaceScale, bodyLine, titleLine } = getReadingMetrics();
+    const { inputCard, inputOuter, editorArea, inputToolbar, markdown, aiContent } = SELECTORS;
+
+    return `
+      /* ---------- 全局方角（数值见脚本顶部 LAYOUT） ---------- */
+      :root,
+      :root *,
+      :root::before,
+      :root::after,
+      :root *::before,
+      :root *::after {
+        border-radius: ${LAYOUT.cornerRadius}px !important;
+      }
+
+      /* ---------- 隐藏指定界面元素 ---------- */
+      :root :is(
+        .agent-dialogue__tool__download,
+        [class*="LandingChatGuide_guide__"],
+        .copyright-wp,
+        .yb__pc_download,
+        [data-ai-creation-sidebar-entry="true"],
+        [data-skill-market-sidebar-entry="true"]
+      ) {
+        display: none !important;
+      }
+
+      /* ---------- 输入框位置与紧凑布局 ---------- */
+      ${inputOuter} {
+        padding-bottom: ${LAYOUT.inputBottomSpace}px !important;
+      }
+
+      :root :is(${inputCard}) {
+        min-height: 0 !important;
+        gap: ${LAYOUT.inputContentGap}px !important;
+        padding-top: ${LAYOUT.inputPaddingY}px !important;
+        padding-bottom: ${LAYOUT.inputPaddingY}px !important;
+      }
+
+      :root :is(${inputCard}) ${editorArea} {
+        margin-top: ${LAYOUT.editorTopMargin}px !important;
+        padding-top: ${LAYOUT.editorTopPadding}px !important;
+      }
+
+      :root :is(${inputCard}) ${inputToolbar} {
+        padding-top: ${LAYOUT.toolbarPaddingTop}px !important;
+        padding-bottom: ${LAYOUT.toolbarPaddingBottom}px !important;
+      }
+
+      /* ---------- 阅读列宽 ---------- */
+      .agent-dialogue__content--common__content {
+        --hunyuan-chat-list-width: 100% !important;
+        --hunyuan-chat-list-max-width: ${width}px !important;
+        --hunyuan-chat-list-max-width-dynamic: ${width}px !important;
+      }
+
+      ${aiContent} :is(.agent-chat__bubble__content, .hyc-common-markdown-style) {
+        box-sizing: border-box !important;
+        max-width: ${width}px !important;
+      }
+
+      /* ---------- 字间距 ---------- */
+      ${markdown} {
+        letter-spacing: ${letter}px !important;
+      }
+
+      /* ---------- 正文字号与行高 ---------- */
+      ${markdown} :is(p, .ybc-p, li, blockquote) {
+        font-size: ${font}px !important;
+        line-height: ${bodyLine} !important;
+      }
+
+      ${markdown} h1 {
+        font-size: calc(${font}px * 1.5) !important;
+        line-height: ${titleLine} !important;
+      }
+      ${markdown} h2 {
+        font-size: calc(${font}px * 1.25) !important;
+        line-height: ${titleLine} !important;
+      }
+      ${markdown} :is(h3, h4, h5, h6) {
+        font-size: ${font}px !important;
+      }
+      ${markdown} h3 {
+        line-height: ${titleLine} !important;
+      }
+      ${markdown} :is(h4, h5, h6) {
+        line-height: ${bodyLine} !important;
+      }
+
+      ${markdown} :is(table, th, td) {
+        font-size: max(12px, calc(${font}px * .875)) !important;
+        line-height: 1.6 !important;
+      }
+
+      /* ---------- 段落间距 ---------- */
+      ${markdown} > :is(p, .ybc-p) {
+        margin-bottom: calc(${space}px * ${spaceScale}) !important;
+      }
+      ${markdown} > :is(p, .ybc-p) + :is(p, .ybc-p) {
+        margin-top: 0 !important;
+      }
+      ${markdown} > :is(p, .ybc-p):last-child {
+        margin-bottom: 0 !important;
+      }
+
+      /* 代码与公式保持原生字距，避免对齐和排版被打乱。 */
+      ${markdown} :is(pre, code, .katex, .katex *) {
+        letter-spacing: normal !important;
+      }
+
+      /* 原生按钮保留在 React 树中，以维持原点击逻辑；可见位置由面板内的代理按钮接管。 */
+      :root .${SCROLL_BOTTOM_CLASS} {
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+
+      /* ---------- 暗色模式修补 ---------- */
+      html[data-yb-reader-dark="1"] {
+        color-scheme: dark;
+      }
+
+      html[data-yb-reader-dark="1"] :is(${inputCard}) {
+        background-color: #303030 !important;
+        color: #f3f3f3 !important;
+        border-color: rgba(255, 255, 255, .10) !important;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, .28) !important;
+        color-scheme: dark !important;
+      }
+
+      html[data-yb-reader-dark="1"] :is(${inputCard}) :is(
+        .ql-editor, textarea, input, [contenteditable="true"]
+      ) {
+        background-color: transparent !important;
+        color: #f3f3f3 !important;
+        caret-color: #f3f3f3 !important;
+      }
+
+      html[data-yb-reader-dark="1"] :is(${inputCard}, .t-dialog) ::placeholder {
+        color: rgba(255, 255, 255, .42) !important;
+      }
+
+      html[data-yb-reader-dark="1"] :is(
+        .hyc-content-file,
+        .hyc-common-file-viewer__children,
+        .FileList_inputFileListItem__sOOlP,
+        .FileList_inputFileListItemPdf___5kgD
+      ) {
+        background-color: #303030 !important;
+        border-color: rgba(255, 255, 255, .12) !important;
+        color: #f3f3f3 !important;
+      }
+
+      html[data-yb-reader-dark="1"] :is(
+        .hyc-content-file__info__name,
+        .hyc-content-file__info__size,
+        [class*="inputFileListItemPdfInfo"]
+      ) {
+        color: rgba(255, 255, 255, .88) !important;
+      }
+
+      html[data-yb-reader-dark="1"] .hyc-content-file__info__size,
+      html[data-yb-reader-dark="1"] [class*="inputFileListItemPdfInfoDetail"] {
+        color: rgba(255, 255, 255, .45) !important;
+      }
+
+      html[data-yb-reader-dark="1"] :is(
+        .t-dialog,
+        .t-dialog__body,
+        .t-dialog__footer,
+        .t-popup__content,
+        .t-drawer__body
+      ) {
+        background-color: #252525 !important;
+        color: #f3f3f3 !important;
+        border-color: rgba(255, 255, 255, .10) !important;
+        color-scheme: dark !important;
+      }
+
+      html[data-yb-reader-dark="1"] :is(.t-dialog__header, .t-dialog__body, .t-dialog__footer) {
+        color: #f3f3f3 !important;
+      }
+
+      html[data-yb-reader-dark="1"] :is(.t-dialog, .t-popup) :is(
+        input, textarea, .t-input, .t-textarea__inner
+      ) {
+        background-color: #303030 !important;
+        color: #f3f3f3 !important;
+        border-color: rgba(255, 255, 255, .14) !important;
+      }
+    `;
+  }
+
+  function applyPageCss() {
+    if (!pageStyle) {
+      pageStyle = document.createElement('style');
+      pageStyle.id = PAGE_STYLE_ID;
+      (document.head || document.documentElement).appendChild(pageStyle);
+    }
+    pageStyle.textContent = buildPageCss();
+  }
+
+  function saveReading() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(reading));
+    } catch {
+      // 存储失败不阻断当前页面上的即时调节。
+    }
+    applyPageCss();
+  }
+
+  // ======================= 动态按钮归位 =======================
+  function isVisibleElement(element) {
+    const computed = getComputedStyle(element);
+    return computed.display !== 'none'
+      && computed.visibility !== 'hidden'
+      && element.getClientRects().length > 0;
+  }
+
+  function isScrollBottomIconButton(control) {
+    const input = document.querySelector(SELECTORS.inputCard);
+    if (!input || !isVisibleElement(control)) return false;
+    if (control.closest(`#${HOST_ID}, ${SELECTORS.inputCard}, .agent-dialogue__tool__download`)) return false;
+
+    // 同一下箭头也用于下载、折叠等控件；只接受输入框上方附近的可见按钮。
+    const controlRect = control.getBoundingClientRect();
+    const inputRect = input.getBoundingClientRect();
+    const isAboveInput = controlRect.bottom <= inputRect.top + 24
+      && controlRect.bottom >= inputRect.top - 240;
+    const isHorizontallyNear = controlRect.right >= inputRect.left - 80
+      && controlRect.left <= inputRect.right + 80;
+    return isAboveInput && isHorizontallyNear;
+  }
+
+  function resolveScrollBottomControl(candidate) {
+    const isArrowIcon = candidate.matches(SCROLL_BOTTOM_ICON_SELECTOR);
+    const control = candidate.closest('button, [role="button"]')
+      || (isArrowIcon ? candidate.parentElement : candidate);
+    if (!control || control.closest(`#${HOST_ID}`)) return null;
+    if (isArrowIcon && !isScrollBottomIconButton(control)) return null;
+    return control;
+  }
+
+  function syncScrollBottomControls() {
+    const controls = new Set();
+    for (const candidate of document.querySelectorAll(SCROLL_BOTTOM_SELECTOR)) {
+      const control = resolveScrollBottomControl(candidate);
+      if (control && isVisibleElement(control)) controls.add(control);
+    }
+
+    nativeScrollBottomControl = controls.values().next().value || null;
+    for (const control of controls) {
+      control.classList.add(SCROLL_BOTTOM_CLASS);
+      control.setAttribute('aria-hidden', 'true');
+      control.setAttribute('tabindex', '-1');
+    }
+    if (panelState.back) panelState.back.hidden = !nativeScrollBottomControl;
+  }
+
+  function scheduleDomSync() {
+    if (domSyncScheduled) return;
+    domSyncScheduled = true;
+    requestAnimationFrame(() => {
+      domSyncScheduled = false;
+      if (!panelState.host?.isConnected) mountPanel();
+      syncScrollBottomControls();
+    });
+  }
+
+  // ======================= 诊断 =======================
+  function describeElement(element) {
+    const computed = getComputedStyle(element);
+    const classes = typeof element.className === 'string'
+      ? element.className.trim().replace(/\s+/g, '.')
+      : '';
+    const id = element.id ? `#${element.id}` : '';
+    const rect = element.getBoundingClientRect();
+    return [
+      element.tagName.toLowerCase() + id + (classes ? `.${classes}` : ''),
+      `w=${Math.round(rect.width)}`,
+      `mw=${computed.maxWidth}`,
+      `fs=${computed.fontSize}`,
+      `lh=${computed.lineHeight}`,
+      `ls=${computed.letterSpacing}`,
+      `mb=${computed.marginBottom}`,
+    ].join(' | ');
+  }
+
+  function diagnose() {
+    const marks = Array.from(document.querySelectorAll(SELECTORS.markdown));
+    const lines = [
+      '腾讯元宝 阅读调节诊断',
+      `URL: ${location.href}`,
+      `viewport: ${window.innerWidth} × ${window.innerHeight}`,
+      `AI 正文容器: ${marks.length}`,
+      `当前阅读设置: ${JSON.stringify(reading)}`,
+      `当前布局参数: ${JSON.stringify(LAYOUT)}`,
+      '',
+      '=== 输入区与悬浮按钮 ===',
+    ];
+
+    [
+      SELECTORS.inputOuter,
+      SELECTORS.inputCard,
+      SELECTORS.editorArea,
+      SELECTORS.inputToolbar,
+      `.${SCROLL_BOTTOM_CLASS}`,
+    ].forEach((selector) => {
+      const element = document.querySelector(selector);
+      lines.push(`${element ? '✓' : '×'} ${selector}${element ? `  ${describeElement(element)}` : ''}`);
+    });
+
+    const scope = document.querySelector('.agent-dialogue__content--common__content, .agent-chat__list');
+    const variables = getComputedStyle(scope || document.documentElement);
+    lines.push(
+      '',
+      '=== 宽度变量（对话内容区） ===',
+      `作用域: ${scope ? describeElement(scope) : '未找到，改用 :root'}`,
+      `--hunyuan-chat-list-max-width = ${variables.getPropertyValue('--hunyuan-chat-list-max-width').trim()}`,
+      `--hunyuan-chat-list-width = ${variables.getPropertyValue('--hunyuan-chat-list-width').trim()}`,
+      '',
+      '=== 外层容器 ===',
+    );
+
+    [
+      '.agent-chat__list__content',
+      '.agent-chat__list__content-wrapper',
+      '.agent-dialogue__content--common__content',
+      '.agent-chat__conv--ai',
+      '.agent-chat__bubble--ai',
+      '.agent-chat__bubble__content',
+    ].forEach((selector) => {
+      const element = document.querySelector(selector);
+      lines.push(`${element ? '✓' : '×'} ${selector}${element ? `  ${describeElement(element)}` : ''}`);
+    });
+
+    const last = marks[marks.length - 1];
+    lines.push('', '=== 最后一段 AI 正文 ===');
+    if (!last) {
+      lines.push('未找到可调节的正文。若页面刚打开，请先发起一次对话再诊断。');
+      lines.push(`页面中的 .hyc-common-markdown-style 数量: ${document.querySelectorAll('.hyc-common-markdown-style').length}`);
+      return lines.join('\n');
+    }
+
+    let node = last;
+    let depth = 0;
+    while (node && node !== document.body && depth < 12) {
+      lines.push(`${'  '.repeat(depth)}${describeElement(node)}`);
+      node = node.parentElement;
+      depth += 1;
+    }
+
+    const sample = last.querySelector('p, .ybc-p, li');
+    lines.push('', '=== 正文段落 ===');
+    lines.push(sample ? describeElement(sample) : '未找到可调节的段落');
+    return lines.join('\n');
+  }
+
+  // ======================= 控制面板 =======================
+  function buildPanelCss() {
+    const panelBottom = LAYOUT.controlBottom + LAYOUT.controlSize + 10;
+    const backButtonRight = LAYOUT.controlRight + LAYOUT.controlSize + LAYOUT.controlGap;
+    return `
+      :host {
+        all: initial;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+      }
+      *, *::before, *::after {
+        box-sizing: border-box;
+        border-radius: ${LAYOUT.cornerRadius}px !important;
+      }
+
+      .fab, .back {
+        position: fixed;
+        right: ${LAYOUT.controlRight}px;
+        bottom: ${LAYOUT.controlBottom}px;
+        z-index: 2147483647;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: ${LAYOUT.controlSize}px;
+        min-width: ${LAYOUT.controlSize}px;
+        height: ${LAYOUT.controlSize}px;
+        min-height: ${LAYOUT.controlSize}px;
+        aspect-ratio: 1 / 1;
+        margin: 0;
+        padding: 0;
+        border: 1px solid rgba(0, 0, 0, .14);
+        background: rgba(255, 255, 255, .94);
+        color: #202124;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .16);
+        font: 600 15px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+        cursor: pointer;
+        backdrop-filter: blur(8px);
+        transition: box-shadow .15s ease;
+      }
+      .back { right: ${backButtonRight}px; }
+      .back[hidden] { display: none; }
+      .fab-icon, .back svg {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: ${LAYOUT.controlIconSize}px;
+        height: ${LAYOUT.controlIconSize}px;
+      }
+      .fab:hover, .back:hover { box-shadow: 0 6px 22px rgba(0, 0, 0, .2); }
+      .fab:focus-visible, .back:focus-visible { outline: 2px solid #00B259; outline-offset: 2px; }
+
+      .panel {
+        position: fixed;
+        right: ${LAYOUT.controlRight}px;
+        bottom: ${panelBottom}px;
+        z-index: 2147483647;
+        width: min(280px, calc(100vw - 24px));
+        max-height: calc(100vh - ${panelBottom + 20}px);
+        padding: 14px 16px 12px;
+        overflow: auto;
+        border: 1px solid rgba(0, 0, 0, .12);
+        background: rgba(255, 255, 255, .97);
+        color: #202124;
+        box-shadow: 0 10px 36px rgba(0, 0, 0, .2);
+        font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+        backdrop-filter: blur(10px);
+        animation: rt-pop .14s ease-out;
+      }
+      .panel[hidden] { display: none; }
+      @keyframes rt-pop {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
+      }
+      .title { font-size: 14px; font-weight: 600; letter-spacing: .01em; }
+      .close {
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        opacity: .55;
+        font: 20px/1 sans-serif;
+        cursor: pointer;
+      }
+      .close:hover { opacity: 1; background: rgba(128, 128, 128, .14); }
+      .close:focus-visible { outline: 2px solid #00B259; outline-offset: 1px; }
+
+      .row { margin-top: 8px; }
+      .row label {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .name { font-size: 12.5px; color: #4b5563; }
+      .val {
+        color: #6b7280;
+        font-size: 11.5px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      input[type="range"] {
+        display: block;
+        width: 100%;
+        height: 20px;
+        margin: 3px 0 0;
+        padding: 0;
+        accent-color: #00B259;
+        cursor: pointer;
+        background: transparent;
+      }
+
+      .actions { display: flex; gap: 8px; margin-top: 9px; }
+      .actions button {
+        flex: 1;
+        height: 30px;
+        border: 1px solid rgba(0, 0, 0, .12);
+        background: rgba(0, 0, 0, .035);
+        color: inherit;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .actions button:hover { background: rgba(0, 0, 0, .07); }
+      .actions button:focus-visible { outline: 2px solid #00B259; outline-offset: 1px; }
+
+      .diag {
+        display: none;
+        width: 100%;
+        max-height: 190px;
+        margin: 9px 0 0;
+        padding: 8px;
+        overflow: auto;
+        border: 1px solid rgba(128, 128, 128, .22);
+        background: rgba(128, 128, 128, .07);
+        color: inherit;
+        font: 10.5px/1.45 Consolas, "Cascadia Mono", monospace;
+        white-space: pre-wrap;
+        word-break: break-all;
+        user-select: text;
+      }
+      .diag.show { display: block; }
+
+      :host([data-yb-theme="dark"]) :is(.fab, .back) {
+        border-color: rgba(255, 255, 255, .16);
+        background: rgba(45, 46, 48, .95);
+        color: #eceff3;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .48);
+      }
+      :host([data-yb-theme="dark"]) .panel {
+        border-color: rgba(255, 255, 255, .14);
+        background: rgba(35, 35, 35, .97);
+        color: #eceff3;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, .55);
+      }
+      :host([data-yb-theme="dark"]) .name { color: #c5cad3; }
+      :host([data-yb-theme="dark"]) .val { color: #9aa1ad; }
+      :host([data-yb-theme="dark"]) .actions button {
+        border-color: rgba(255, 255, 255, .14);
+        background: rgba(255, 255, 255, .07);
+      }
+      :host([data-yb-theme="dark"]) .actions button:hover { background: rgba(255, 255, 255, .12); }
+      :host([data-yb-theme="dark"]) .close:hover { background: rgba(255, 255, 255, .12); }
+      :host([data-yb-theme="dark"]) .diag {
+        border-color: rgba(255, 255, 255, .16);
+        background: rgba(255, 255, 255, .06);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .panel { animation: none; }
+        .fab, .back { transition: none; }
+      }
+    `;
+  }
+
+  function buildPanelHtml() {
+    const rows = READING_KEYS.map((key) => {
+      const range = READING_RANGES[key];
+      return `
+        <div class="row">
+          <label for="rt-${key}">
+            <span class="name">${READING_LABELS[key]}</span>
+            <span class="val" id="rt-v-${key}"></span>
+          </label>
+          <input type="range" id="rt-${key}" data-key="${key}"
+                 min="${range.min}" max="${range.max}" step="${range.step}">
+        </div>`;
+    }).join('');
+
+    return `
+      <style>${buildPanelCss()}</style>
+      <button class="back" type="button" aria-label="返回至底部" title="返回至底部" hidden>
+        <svg width="${LAYOUT.controlIconSize}" height="${LAYOUT.controlIconSize}"
+             viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+          <path d="M12 4v14m-6-6 6 6 6-6" stroke="currentColor" stroke-width="2"
+                stroke-linecap="square" stroke-linejoin="miter"/>
+        </svg>
+      </button>
+      <button class="fab" type="button" aria-label="打开元宝阅读调节"
+              aria-controls="rt-panel" aria-expanded="false" title="元宝阅读调节">
+        <span class="fab-icon" aria-hidden="true">Aa</span>
+      </button>
+      <div class="panel" id="rt-panel" hidden role="dialog" aria-label="元宝阅读调节">
+        <div class="head">
+          <span class="title">元宝阅读调节</span>
+          <button class="close" type="button" aria-label="关闭" title="关闭">×</button>
+        </div>
+        ${rows}
+        <div class="actions">
+          <button type="button" class="reset">重置</button>
+          <button type="button" class="diag-btn">诊断</button>
+        </div>
+        <pre class="diag" aria-live="polite"></pre>
+      </div>
+    `;
+  }
+
+  function formatReadingValue(key) {
+    if (key === 'density') return String(reading[key]);
+    if (key === 'letter') return `${Number(reading[key].toFixed(1))} px`;
+    return `${reading[key]} px`;
+  }
+
+  function syncPanel() {
+    const { shadow } = panelState;
+    if (!shadow) return;
+    for (const key of READING_KEYS) {
+      const input = shadow.getElementById(`rt-${key}`);
+      const output = shadow.getElementById(`rt-v-${key}`);
+      if (!input || !output) continue;
+      input.value = String(reading[key]);
+      output.textContent = formatReadingValue(key);
+    }
+  }
+
+  function setPanelOpen(open) {
+    const { panel, fab } = panelState;
+    if (!panel || !fab) return;
+    panel.hidden = !open;
+    fab.setAttribute('aria-expanded', String(open));
+    fab.setAttribute('aria-label', open ? '关闭元宝阅读调节' : '打开元宝阅读调节');
+  }
+
+  // ======================= 主题同步 =======================
+  const darkMedia = window.matchMedia('(prefers-color-scheme: dark)');
+
+  function isDarkTheme() {
+    const root = document.documentElement;
+    const mode = root.getAttribute('yb-theme-mode') || root.getAttribute('theme-mode');
+    if (mode === 'light') return false;
+    if (mode === 'dark') return true;
+    return root.classList.contains('dark')
+      || Boolean(document.body?.classList.contains('dark'))
+      || darkMedia.matches;
+  }
+
+  function syncTheme() {
+    const dark = isDarkTheme();
+    document.documentElement.dataset.ybReaderDark = dark ? '1' : '0';
+    if (panelState.host) panelState.host.dataset.ybTheme = dark ? 'dark' : 'light';
+  }
+
+  // ======================= 面板挂载与事件 =======================
+  function bindPanelEvents() {
+    const { shadow, panel, back, fab } = panelState;
+
+    back.addEventListener('click', () => {
+      if (nativeScrollBottomControl?.isConnected) nativeScrollBottomControl.click();
+    });
+    fab.addEventListener('click', () => setPanelOpen(panel.hidden));
+    shadow.querySelector('.close').addEventListener('click', () => setPanelOpen(false));
+    shadow.querySelector('.reset').addEventListener('click', () => {
+      reading = { ...DEFAULT_READING };
+      syncPanel();
+      saveReading();
+    });
+
+    shadow.querySelector('.diag-btn').addEventListener('click', () => {
+      const text = diagnose();
+      panelState.diag.textContent = text;
+      panelState.diag.classList.add('show');
+      panelState.diag.scrollTop = 0;
+      navigator.clipboard?.writeText(text).catch(() => {
+        // 剪贴板权限被拒绝时，仍可直接在诊断框中复制。
+      });
+    });
+
+    shadow.addEventListener('input', (event) => {
+      const key = event.target?.dataset?.key;
+      if (!OWN_KEYS.has(key)) return;
+      reading[key] = clampReading(key, event.target.value);
+      syncPanel();
+      saveReading();
+    });
+
+    // 避免方向键、空格等按键被聊天页快捷键截获。
+    panel.addEventListener('keydown', (event) => event.stopPropagation());
+  }
+
+  function mountPanel() {
+    if (panelState.host?.isConnected || !document.body) return;
+
+    const host = document.createElement('div');
+    host.id = HOST_ID;
+    host.style.cssText = 'all:initial;';
+    document.body.appendChild(host);
+
+    const shadow = host.attachShadow({ mode: 'open' });
+    shadow.innerHTML = buildPanelHtml();
+
+    Object.assign(panelState, {
+      host,
+      shadow,
+      panel: shadow.querySelector('.panel'),
+      back: shadow.querySelector('.back'),
+      fab: shadow.querySelector('.fab'),
+      diag: shadow.querySelector('.diag'),
+    });
+
+    bindPanelEvents();
+    syncTheme();
+    syncPanel();
+  }
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && panelState.panel && !panelState.panel.hidden) {
+      setPanelOpen(false);
+      panelState.fab?.focus();
+    }
+  }, true);
+
+  document.addEventListener('pointerdown', (event) => {
+    const { panel, host } = panelState;
+    if (!panel || panel.hidden || !host) return;
+    if (!event.composedPath().includes(host)) setPanelOpen(false);
+  }, true);
+
+  // ======================= 启动与动态页面维护 =======================
+  function observePage() {
+    const themeObserver = new MutationObserver(syncTheme);
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['theme-mode', 'yb-theme-mode', 'class'],
+    });
+
+    const domObserver = new MutationObserver(scheduleDomSync);
+    domObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'style', 'aria-label', 'title'],
+    });
+
+    if (darkMedia.addEventListener) {
+      darkMedia.addEventListener('change', syncTheme);
+    } else {
+      darkMedia.addListener(syncTheme);
+    }
+  }
+
+  function init() {
+    applyPageCss();
+    mountPanel();
+    syncTheme();
+    syncScrollBottomControls();
+    observePage();
+  }
+
+  if (document.body) {
+    init();
+  } else {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  }
+})();
