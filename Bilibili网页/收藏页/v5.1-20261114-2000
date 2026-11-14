@@ -1,0 +1,808 @@
+/* ==UserStyle==
+@name           Bilibili收藏页
+@namespace        xdcedar.stylus
+@author          LinYang
+@version          20261114-1820
+@description       无
+@license          无
+@preprocessor      default
+==/UserStyle== */
+
+/* ============================== 可调参数区 ============================== */
+/* 网格行列、排序序号及重置零值属于结构常量,保留在对应规则中 */
+@-moz-document
+  regexp("^https?://space\\.bilibili\\.com/\\d+/favlist.*"),
+  url-prefix("https://www.bilibili.com/video/") {
+
+  :root {
+    --bbfl-corner-radius: 0px;          /* 界面圆角半径*/
+    --bbfl-aside-width: 100%;           /* 收藏夹侧栏宽度(原站变量映射) */
+
+/* -------------------- 页面留白 -------------------- */
+    --bbfl-page-gutter: 4px;            /* 页面左右留白 */
+    --bbfl-page-bottom-space: 0px;      /* 页面底部留白 */
+    --bbfl-video-top-space: -18px;      /* 视频列表顶部留白 */
+
+/* -------------------- 视频列表 -------------------- */
+    --bbfl-video-columns: 8;            /* 列表列数 */
+    --bbfl-video-gap: 4px;              /* 视频卡片的水平间距与垂直间距 */
+    --bbfl-video-bottom-gap: 18px;      /* 视频列表与下方区域的间距 */
+    --bbfl-video-pagination-gap: 3px;   /* 视频列表与右侧分页栏的间距 */
+
+/* -------------------- 合并控制区：控制栏(A)+搜索框(B)+筛选栏(C) -------------------- */
+    /* 控制栏按钮和筛选栏按钮的…… */
+    --bbfl-filter-button-width: 102px;  /* 宽度 */
+    --bbfl-filter-button-height: 34px;  /* 高度 */
+    --bbfl-filter-button-font-size: 14px;      /* 字号 */
+    --bbfl-filter-button-padding-inline: 15px; /* 左右内边距 */
+    --bbfl-filter-button-gap: 12px;     /* 间距 */
+    /* 搜索框的…… */
+    --bbfl-search-width: 500px;         /* 长度 */
+    /* 零碎参数 */
+    --bbfl-controls-item-gap: 20px;     /* ABC的间距 */
+    --bbfl-controls-folder-gap: 10px;   /* 合并控制区与收藏夹区的间距 */
+    --bbfl-detail-gap: 10px;            /* 详情区按钮与文字间距(回退规则) */
+    --bbfl-info-padding-block: 10px;    /* 合并前详情区的上下内边距 */
+
+/* -------------------- 收藏列表 -------------------- */
+    --bbfl-folder-grid-columns: 14;     /* 列表列数 */
+    /* 收藏夹按钮的…… */
+    --bbfl-folder-button-width: 102px;  /* 宽度 */
+    --bbfl-folder-button-height: 34px;  /* 高度 */
+    --bbfl-folder-button-padding-inline: 15px; /* 左右内边距 */
+    --bbfl-folder-column-gap: 12px;     /* 左右间距 */
+    --bbfl-folder-row-gap: 6px;         /* 上下间距 */
+    --bbfl-folder-border-width: 1px;    /* 边框宽度 */
+    /* 新建按钮的…… */
+    --bbfl-folder-create-padding-inline: 4px; /* 左右内边距 */
+    --bbfl-folder-create-icon-gap: 4px; /* 图标与文字的间距 */
+    /* 零碎参数 */ 
+    --bbfl-folder-title-gap: 1px;       /* 收藏夹标题右侧补偿间距 */
+    --bbfl-folder-panel-max-height: 300px; /* 列表面板最大高度 */
+
+/* -------------------- 右侧垂直分页栏 -------------------- */
+    --bbfl-pagination-width: 36px;      /* 分页栏及页码按钮宽度 */
+    --bbfl-pagination-control-height: 30px; /* 页码与跳页控件高度 */
+    --bbfl-pagination-gap: 4px;         /* 分页控件之间的垂直间距 */
+    --bbfl-pagination-input-padding-inline: 4px; /* 跳页输入框左右内边距 */
+    --bbfl-pagination-line-height: 1;   /* 跳页文字行高 */
+
+/* -------------------- 视频页收藏弹窗 -------------------- */
+    --bbfl-dialog-grid-columns: 5;      /* 弹窗收藏夹列表列数 */
+    --bbfl-dialog-width: 950px;         /* 弹窗宽度 */
+    --bbfl-dialog-row-gap: 2px;         /* 弹窗列表行间距 */
+    --bbfl-dialog-item-height: 25px;    /* 弹窗列表项高度 */
+    --bbfl-dialog-item-padding-block: 3px; /* 弹窗列表项上下内边距 */
+    --bbfl-dialog-item-padding-inline: 10px; /* 弹窗列表项左右内边距 */
+    --bbfl-dialog-checkbox-min-width: 20px; /* 勾选框最小宽度 */
+    --bbfl-dialog-checkbox-gap: 10px;   /* 勾选框与标题的间距 */
+    --bbfl-dialog-submit-offset-inline: 40px; /* 确定按钮右侧偏移 */
+    --bbfl-dialog-add-offset-bottom: 18px; /* 新建收藏夹按钮底部偏移 */
+  }
+}
+
+
+/* 收藏页 */
+@-moz-document regexp("^https?://space\\.bilibili\\.com/\\d+/favlist.*") {
+
+  /* 统一方角 */
+  *,
+  *::before,
+  *::after {
+    border-radius: var(--bbfl-corner-radius) !important;
+  }
+
+  /* ============================== 页面布局 ============================== */
+  main.space-main.route_favlist,
+  main.space-main.route_favlist > .space-favlist {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  main.space-main.route_favlist {
+    margin-inline: 0 !important;
+    padding-inline: var(--bbfl-page-gutter) !important;
+  }
+
+  /* 顶部导航隐藏后,清除原有的负边距 */
+  #app {
+    margin-top: 0 !important;
+  }
+
+  /* 侧边栏与内容区纵向排列,侧边栏扩展至全宽 */
+  main.space-main .space-favlist {
+    display: flex;
+    flex-direction: column;
+  }
+
+  main.space-main .space-favlist .favlist-aside {
+    --aside-width: var(--bbfl-aside-width);
+    position: static;
+  }
+
+  .fav-collapse-wrap {
+    max-height: var(--bbfl-folder-panel-max-height);
+  }
+
+  /* ============================== 收藏列表 ============================== */
+
+  /*
+   * 1. 通过"新建收藏夹"按钮识别"我创建的收藏夹"；
+   * 2. 通过 :not() 适配合集、其他收藏及其他用户的收藏夹。
+   */
+  .fav-collapse .vui_collapse_item_content
+    .fav-collapse-create + .vui_sidebar .fav-sortable-list,
+
+  .fav-collapse .vui_collapse_item_content
+    .vui_sidebar:not(.fav-collapse-create + .vui_sidebar) {
+    display: grid;
+    grid-template-columns:
+      repeat(var(--bbfl-folder-grid-columns), minmax(0, 1fr));
+    justify-content: stretch;
+  }
+
+  /* 缩短"新建收藏夹"按钮,避免误触 */
+  .fav-collapse-wrap > .fav-collapse-create {
+    width: calc(100% / var(--bbfl-folder-grid-columns));
+  }
+
+  /* 默认收藏夹不在可排序列表中,需要单独调整宽度 */
+  .fav-collapse .vui_collapse_item_content
+    .vui_sidebar > .fav-sidebar-item:has(+ .fav-sortable-list) {
+    width: calc(100% / var(--bbfl-folder-grid-columns));
+  }
+
+  .fav-sidebar-item .vui_sidebar-item-title .vui_ellipsis {
+    max-width: stretch;
+    margin-right: var(--bbfl-folder-title-gap);
+  }
+
+  /* -------------------- "我创建的收藏夹"按钮 -------------------- */
+  /*
+   * 将新建按钮、默认收藏夹和其他收藏夹放入同一个网格。
+   * 新建按钮占第一列,默认收藏夹占第二列,其余项目自动排列。
+   */
+  .favlist-aside .fav-collapse:has(.fav-collapse-create)
+    .fav-collapse-wrap {
+    display: grid !important;
+    grid-template-columns:
+      repeat(var(--bbfl-folder-grid-columns), var(--bbfl-folder-button-width)) !important;
+    column-gap: var(--bbfl-folder-column-gap) !important;
+    row-gap: var(--bbfl-folder-row-gap) !important;
+    justify-content: start !important;
+    align-items: center;
+  }
+
+  /* 展开中间容器,使所有收藏夹直接参与网格布局 */
+  .favlist-aside .fav-collapse:has(.fav-collapse-create)
+    :is(.vui_sidebar, .fav-sortable-list) {
+    display: contents !important;
+  }
+
+  .favlist-aside .fav-collapse:has(.fav-collapse-create)
+    .fav-collapse-create {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto !important;
+    margin: 0 !important;
+  }
+
+  .favlist-aside .fav-collapse:has(.fav-collapse-create)
+    .vui_sidebar > .fav-sidebar-item {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .favlist-aside .fav-collapse:has(.fav-collapse-create)
+    .fav-sidebar-item {
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+
+  /* 收藏夹按钮尺寸独立可调,默认102×34px、水平间距12px */
+  .favlist-aside .fav-collapse:has(.fav-collapse-create)
+    :is(.fav-collapse-create, .fav-sidebar-item) {
+    box-sizing: border-box !important;
+    width: var(--bbfl-folder-button-width) !important;
+    min-width: var(--bbfl-folder-button-width) !important;
+    height: var(--bbfl-folder-button-height) !important;
+    margin: 0 !important;
+  }
+
+  .favlist-aside .fav-collapse:has(.fav-collapse-create)
+    .fav-sidebar-item > .vui_sidebar-item {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: var(--bbfl-folder-button-height) !important;
+    padding: 0 var(--bbfl-folder-button-padding-inline) !important;
+  }
+
+  /* 收藏夹按钮边框 */
+  .favlist-aside .fav-collapse:has(.fav-collapse-create) .fav-collapse-create,
+  .favlist-aside .fav-collapse:has(.fav-collapse-create)
+    .fav-sidebar-item > .vui_sidebar-item {
+    border: var(--bbfl-folder-border-width) solid #888 !important;
+  }
+  /* 新建按钮保留图标,在相同宽度内容纳完整文字 */
+  .favlist-aside .fav-collapse:has(.fav-collapse-create)
+    .fav-collapse-create {
+    justify-content: center !important;
+    padding: 0 var(--bbfl-folder-create-padding-inline) !important;
+    white-space: nowrap !important;
+  }
+
+  .favlist-aside .fav-collapse:has(.fav-collapse-create)
+    .fav-collapse-create .vui_icon {
+    margin-right: var(--bbfl-folder-create-icon-gap) !important;
+  }
+  /* ============================== 隐藏指定元素 ============================== */
+  #biliMainHeader,
+  .space-header,
+  .space-navbar,
+
+  /* 我追的合集/收藏夹 */
+  .favlist-aside > .vui_collapse > .fav-collapse:nth-child(2),
+
+  /* 其他收藏 */
+  .favlist-aside
+    .fav-collapse:has(.fav-sidebar-item[title="话题收藏"]),
+
+  /* 我的笔记本 */
+  .favlist-aside .fav-collapse:has(a[href*="/v/note-list"]),
+
+  /* 详情区封面、转发和点赞 */
+  .favlist-info-file-card,
+  .favlist-info .favlist-info-action,
+
+  /* 详情区标题、公开状态和播放量 */
+  .favlist-info-detail__title-row,
+  .favlist-info-detail__data .status,
+  .favlist-info-detail__data > div > span:last-child {
+    display: none !important;
+  }
+
+
+  /* 收藏列表导航栏和文件夹图标 */
+  .favlist-aside .fav-collapse:has(.fav-collapse-create)
+    > .vui_collapse_item > .vui_collapse_item_header,
+
+  .favlist-aside .fav-collapse:has(.fav-collapse-create)
+    .fav-sidebar-item svg.fav-sidebar-item__icon {
+    display: none !important;
+  }
+  
+
+  /* ============================== 收藏夹详情区 ============================== */
+  .space-favlist > .favlist-main {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  .favlist-main > .favlist-info {
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: var(--bbfl-info-padding-block) 0 !important;
+  }
+
+  .favlist-info-detail {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    align-content: center !important;
+    gap: var(--bbfl-detail-gap) !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 展开按钮容器,让按钮与视频数参与同一弹性布局 */
+  .favlist-info-detail__actions {
+    display: contents !important;
+  }
+
+  .favlist-info-detail__data,
+  .favlist-info-detail__data > div,
+  .favlist-info-detail__data > div > span:nth-child(2) {
+    margin: 0 !important;
+  }
+
+  .favlist-info-detail__title {
+    order: 3;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+  }
+
+  .favlist-info-detail__actions
+    :is(.playall-btn, .favlist-info-batch) {
+    flex: none !important;
+    margin: 0 !important;
+  }
+
+  /* 当前实际顺序：播放全部 → 批量操作 → 视频数 */
+  .favlist-info-detail__actions .playall-btn {
+    order: 1;
+  }
+
+  .favlist-info-detail__actions .favlist-info-batch {
+    order: 2;
+  }
+
+  .favlist-info-detail__title,
+  .favlist-info-detail__actions
+    :is(.playall-btn, .favlist-info-batch) {
+    align-self: center !important;
+  }
+
+  /* ============================== 视频列表 ============================== */
+  .fav-list-main > .items {
+    display: grid !important;
+    grid-template-columns:
+      repeat(var(--bbfl-video-columns), minmax(0, 1fr)) !important;
+    gap: var(--bbfl-video-gap) !important;
+  }
+
+  .fav-list-main > .items > .items__item {
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+/* ============================== 视频区右侧：垂直分页栏 ============================== */
+/* 清除各层容器的右侧留白,让分页栏贴齐页面右缘 */
+main.space-main.route_favlist,
+main.space-main.route_favlist > .space-favlist,
+main.space-main.route_favlist .favlist-main {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+}
+
+.fav-list-main {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: stretch !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+    column-gap: var(--bbfl-video-pagination-gap) !important;
+}
+
+/* 排序与搜索栏独占一行 */
+.fav-list-main > .fav-list-header {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+}
+
+/* 视频网格占据分页栏左侧的剩余空间 */
+.fav-list-main > .items {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+}
+
+/* 分页栏固定在 flex 行尾 */
+.fav-list-main > .card-pagenation {
+    flex: 0 0 var(--bbfl-pagination-width) !important;
+    align-self: stretch !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: var(--bbfl-pagination-gap) !important;
+    margin: 0 0 0 auto !important;
+    padding: 0 !important;
+}
+
+/* 隐藏上一页、下一页及统计信息 */
+.card-pagenation .vui_pagenation--btn-side,
+.card-pagenation .vui_pagenation-go__count {
+    display: none !important;
+}
+
+/* 页码与跳页控件使用相同的宽度、轴线和间距 */
+.card-pagenation
+    :is(.vui_pagenation--btns, .vui_pagenation-go) {
+    display: flex !important;
+    flex-flow: column nowrap !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+    gap: var(--bbfl-pagination-gap) !important;
+    width: var(--bbfl-pagination-width) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.card-pagenation .vui_pagenation--btn {
+    flex: none !important;
+    width: var(--bbfl-pagination-width) !important;
+    min-width: var(--bbfl-pagination-width) !important;
+    height: var(--bbfl-pagination-control-height) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* 跳页输入框与数字页码保持相同尺寸 */
+.card-pagenation .vui_pagenation-go
+    :is(.vui_input, .vui_input-wrapper) {
+    flex: none !important;
+    box-sizing: border-box !important;
+    width: var(--bbfl-pagination-width) !important;
+    min-width: 0 !important;
+    height: var(--bbfl-pagination-control-height) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.card-pagenation .vui_pagenation-go input {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: var(--bbfl-pagination-control-height) !important;
+    margin: 0 !important;
+    padding: 0 var(--bbfl-pagination-input-padding-inline) !important;
+    text-align: center;
+}
+
+.card-pagenation .vui_pagenation-go__page {
+    align-self: center !important;
+    width: 100% !important;
+    margin: 0 !important;
+    line-height: var(--bbfl-pagination-line-height);
+    text-align: center;
+}
+
+/* ============================== 清除视频区底部留白 ============================== */
+#app,
+main.space-main.route_favlist,
+main.space-main.route_favlist > .space-favlist,
+main.space-main.route_favlist .favlist-main,
+.fav-list-main,
+.fav-list-main > .items {
+    margin-bottom: var(--bbfl-page-bottom-space) !important;
+    padding-bottom: 0 !important;
+}
+
+/* 防止固定高度或最小高度留下额外空白 */
+.fav-list-main,
+.fav-list-main > .items {
+    height: auto !important;
+    min-height: 0 !important;
+}
+    
+  /* ============================== 底部区域重排与控制栏/筛选栏合并(新版界面) ============================== */
+  /*
+   * 第1行：视频列表与右侧分页栏
+   * 第2行：控制栏 → 搜索框 → 筛选栏
+   * 第3行：收藏列表/"我创建的文件夹"
+   * 第4行：稍后再看
+   */
+  main.space-main.route_favlist > .space-favlist {
+    display: grid !important;
+    grid-template-columns: auto auto auto minmax(0, 1fr) var(--bbfl-pagination-width) !important;
+    column-gap: 0 !important;
+    align-items: stretch !important;
+    /* 0px保持原始留白；正值增加；负值通过负边距向上压缩 */
+    padding-top: max(var(--bbfl-video-top-space), 0px) !important;
+    margin-top: min(var(--bbfl-video-top-space), 0px) !important;
+  }
+
+  /* 展开中间容器,使视频列表、控制栏、筛选栏及底部区域直接参与网格布局 */
+  main.space-main.route_favlist > .space-favlist > .favlist-aside,
+  main.space-main.route_favlist .favlist-aside > .vui_collapse,
+  main.space-main.route_favlist > .space-favlist > .favlist-main,
+  main.space-main.route_favlist .favlist-main > .fav-list-main,
+  main.space-main.route_favlist .fav-list-main > .fav-list-header,
+  main.space-main.route_favlist .fav-list-header > .fav-list-header-filter {
+    display: contents !important;
+  }
+
+  /* 视频列表与右侧垂直分页栏保持在最上方 */
+  main.space-main.route_favlist .fav-list-main > .items {
+    grid-column: 1 / 5;
+    grid-row: 1;
+    margin-right: var(--bbfl-video-pagination-gap) !important;
+    margin-bottom: var(--bbfl-video-bottom-gap) !important;
+  }
+
+  main.space-main.route_favlist .fav-list-main > .card-pagenation {
+    grid-column: 5;
+    grid-row: 1;
+  }
+
+  /* 控制栏：位于合并区最左侧 */
+  main.space-main.route_favlist .favlist-main > .favlist-info {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: center !important;
+    box-sizing: border-box !important;
+    width: auto !important;
+    height: var(--bbfl-filter-button-height) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-bottom: 0 !important;
+  }
+
+  /* 筛选栏：位于搜索框之后 */
+  main.space-main.route_favlist .fav-list-header-filter__left {
+    grid-column: 3;
+    grid-row: 2;
+    align-self: center !important;
+    margin-left: var(--bbfl-controls-item-gap) !important;
+  }
+
+  main.space-main.route_favlist .fav-list-header-filter__left .radio-filter {
+    flex-wrap: nowrap !important;
+    column-gap: var(--bbfl-filter-button-gap) !important;
+  }
+
+  main.space-main.route_favlist .favlist-info > .favlist-info-detail {
+    flex: none !important;
+    gap: var(--bbfl-filter-button-gap) !important;
+    width: auto !important;
+    height: var(--bbfl-filter-button-height) !important;
+  }
+
+  /* 五个按钮统一尺寸、左右内边距与水平间距 */
+  main.space-main.route_favlist
+    .fav-list-header-filter__left .radio-filter .radio-filter__item,
+  main.space-main.route_favlist
+    .favlist-info-detail__actions :is(.playall-btn, .favlist-info-batch) {
+    box-sizing: border-box !important;
+    flex: 0 0 var(--bbfl-filter-button-width) !important;
+    justify-content: center !important;
+    width: var(--bbfl-filter-button-width) !important;
+    min-width: var(--bbfl-filter-button-width) !important;
+    height: var(--bbfl-filter-button-height) !important;
+    margin: 0 !important;
+    padding: 0 var(--bbfl-filter-button-padding-inline) !important;
+    font-size: var(--bbfl-filter-button-font-size) !important;
+    white-space: nowrap !important;
+  }
+
+  /* 搜索框位于控制栏与筛选栏之间 */
+  main.space-main.route_favlist .fav-list-header-filter__right {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center !important;
+    justify-self: start !important;
+    min-width: 0 !important;
+    margin-left: var(--bbfl-controls-item-gap) !important;
+  }
+
+  main.space-main.route_favlist
+    .fav-list-header-filter__right > .vui_input.fav-list-header-filter__search {
+    box-sizing: border-box !important;
+    flex: 0 0 var(--bbfl-search-width) !important;
+    width: var(--bbfl-search-width) !important;
+  }
+
+  /* 我创建的收藏夹 */
+  main.space-main.route_favlist
+    .favlist-aside > .vui_collapse > .fav-collapse:has(.fav-collapse-create) {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    margin-top: var(--bbfl-controls-folder-gap) !important;
+  }
+
+  /* 稍后再看 */
+  main.space-main.route_favlist
+    .favlist-aside > .vui_collapse > .fav-collapse:has(a[href*="/watchlater/"]) {
+    grid-column: 1 / -1;
+    grid-row: 4;
+  }
+    
+    
+  /* ============================== (旧版界面)收藏夹侧边栏 ============================== */
+  #page-fav .fav-sidenav {
+    width: 100%;
+  }
+
+  #page-fav .fav-sidenav
+    .fav-list-container#fav-createdList-container {
+    max-height: var(--bbfl-legacy-created-max-height);
+  }
+
+  /* 保持较矮且可滚动,因为滚动才会加载更早的订阅 */
+  #page-fav .fav-sidenav .fav-list-container#fav-list-container {
+    max-height: var(--bbfl-legacy-subscribed-max-height);
+  }
+
+  /* 右侧为滚动条预留 15px */
+  #page-fav .fav-list {
+    display: grid;
+    grid-template-columns:
+      repeat(var(--bbfl-legacy-grid-columns), minmax(0, 1fr));
+    justify-content: stretch;
+    margin-right: var(--bbfl-legacy-scrollbar-width);
+  }
+
+  /*
+   * 默认收藏夹不在 .fav-list 中,需要与列表项等宽。
+   * 计算方式：(可用宽度 − 滚动条宽度)÷ 列数 − 左右内边距。
+   */
+  #page-fav .fav-list-container > .fav-item {
+    width: calc(
+      (100% - var(--bbfl-legacy-scrollbar-width)) / var(--bbfl-legacy-grid-columns) - var(--bbfl-legacy-item-inline-padding)
+    );
+  }
+
+  #page-fav .fav-item {
+    display: flex;
+    align-items: center;
+  }
+
+  /* 仅调整视频收藏夹,不影响话题、专栏等收藏夹 */
+  #page-fav .fav-container .text {
+    flex-grow: 1;
+    line-height: var(--bbfl-legacy-item-line-height);
+  }
+
+  #page-fav .fav-sidenav .num {
+    width: auto;
+    margin-right: var(--bbfl-legacy-count-gap);
+  }
+
+  /* 悬停时仍显示视频收藏数 */
+  #page-fav .col-full.master .fav-container .fav-item:hover .num {
+    display: inline-block;
+  }
+
+  /* ============================== (旧版界面)收藏内容区 ============================== */
+  #page-fav .fav-main {
+    width: 100%;
+    border-top: var(--bbfl-legacy-content-border-width) solid #eee;
+  }
+
+  /*
+   * B站新增的 .clearfix 伪元素会在 Grid 首尾产生空白格子。
+   * 将首个伪元素移到新行行尾；设为 8 以兼容行数较多的话题收藏夹。
+   */
+  .clearfix::before {
+    grid-row-end: var(--bbfl-legacy-clearfix-row-end);
+  }
+}
+
+/* 视频页：收藏弹窗 */
+@-moz-document url-prefix("https://www.bilibili.com/video/") {
+
+  /* 统一方角：清除所有界面元素及伪元素的圆角 */
+  *,
+  *::before,
+  *::after {
+    border-radius: var(--bbfl-corner-radius) !important;
+  }
+  :is(.collection-m, .collection-m-exp) {
+    width: var(--bbfl-dialog-width);
+  }
+
+  :is(.collection-m, .collection-m-exp) .content .group-list {
+    max-height: unset;
+  }
+
+  :is(.collection-m, .collection-m-exp) .content .group-list ul {
+    display: grid;
+    grid-template-columns:
+      repeat(var(--bbfl-dialog-grid-columns), minmax(0, 1fr));
+    row-gap: var(--bbfl-dialog-row-gap);
+    justify-content: stretch;
+  }
+
+  :is(.collection-m, .collection-m-exp) .content .group-list li {
+    height: var(--bbfl-dialog-item-height);
+    padding: var(--bbfl-dialog-item-padding-block) var(--bbfl-dialog-item-padding-inline);
+  }
+
+  :is(.collection-m, .collection-m-exp) .content .group-list li label {
+    display: flex;
+    align-items: center;
+  }
+
+  /* 防止标题过长时挤扁勾选框 */
+  :is(.collection-m, .collection-m-exp)
+    .content .group-list li input[type="checkbox"] + i {
+    min-width: var(--bbfl-dialog-checkbox-min-width);
+    margin-right: var(--bbfl-dialog-checkbox-gap);
+  }
+
+  /* 防止"私密"标签因标题过长而换行 */
+  :is(.collection-m, .collection-m-exp)
+    .content .group-list li label .personal {
+    white-space: nowrap;
+  }
+
+  /* 防止"私密"标签因标题过长而换行 */
+  :is(.collection-m, .collection-m-exp)
+    .content .group-list li label .count {
+    margin-left: auto;
+  }
+
+  :is(.collection-m, .collection-m-exp) .bottom .btn {
+    position: absolute;
+    right: var(--bbfl-dialog-submit-offset-inline);
+  }
+
+  :is(.collection-m, .collection-m-exp)
+    .content .group-list .add-group {
+    position: absolute;
+    bottom: var(--bbfl-dialog-add-offset-bottom);
+  }
+}
+
+/* 旧版界面：视频收藏夹 */
+@-moz-document
+  regexp("^https?://space\\.bilibili\\.com/\\d+/favlist$"),
+  regexp("^https?://space\\.bilibili\\.com/\\d+/favlist\\?fid=\\d+.*$") {
+
+  #page-fav .fav-main .fav-video-list {
+    display: grid;
+    grid-template-columns: repeat(var(--bbfl-legacy-video-columns), minmax(0, 1fr));
+    row-gap: var(--bbfl-legacy-list-row-gap);
+  }
+
+  /* 统一列表项间距,并覆盖第五项原有的特殊右边距 */
+  #page-fav .fav-main .small-item,
+  #page-fav .fav-main .small-item:nth-child(5n) {
+    justify-self: center;
+    margin: 0 var(--bbfl-legacy-item-inline-margin);
+  }
+}
+
+/* 旧版界面：话题收藏夹 */
+@-moz-document regexp(
+  "^https?://space\\.bilibili\\.com/\\d+/favlist\\?fid=topic"
+) {
+  #page-fav .fav-main .fav-video-list {
+    display: grid;
+    grid-template-columns: repeat(var(--bbfl-legacy-topic-columns), minmax(0, 1fr));
+    row-gap: var(--bbfl-legacy-list-row-gap);
+  }
+
+  #page-fav .fav-main .fav-video-list.topic-list .large-item {
+    justify-self: center;
+    margin: 0;
+  }
+}
+
+/* 旧版界面：课程收藏夹 */
+@-moz-document regexp(
+  "^https?://space\\.bilibili\\.com/\\d+/favlist\\?fid=pugvfav"
+) {
+  #page-fav .fav-main .fav-pugv-list {
+    display: grid;
+    grid-template-columns: repeat(var(--bbfl-legacy-course-columns), minmax(0, 1fr));
+    row-gap: var(--bbfl-legacy-list-row-gap);
+  }
+
+  #page-fav .fav-content .fav-pugv-list .pugv-item {
+    justify-self: center;
+    margin: 0;
+  }
+    
+  :root {
+    /* -------------------- 旧版收藏页 -------------------- */
+    --bbfl-legacy-grid-columns: 4;             /* 旧版收藏夹侧栏列数 */
+    --bbfl-legacy-created-max-height: 300px;   /* 我创建的收藏夹最大高度 */
+    --bbfl-legacy-subscribed-max-height: 162px;/* 订阅收藏夹最大高度 */
+    --bbfl-legacy-scrollbar-width: 15px;       /* 侧栏滚动条预留宽度 */
+    --bbfl-legacy-item-inline-padding: 20px;   /* 默认收藏夹左右内边距合计 */
+    --bbfl-legacy-item-line-height: 35px;      /* 旧版收藏夹条目行高 */
+    --bbfl-legacy-count-gap: 5px;              /* 收藏数量右侧间距 */
+    --bbfl-legacy-content-border-width: 10px;  /* 内容区顶部分隔边框 */
+    --bbfl-legacy-clearfix-row-end: 8;         /* clearfix 伪元素所在网格行 */
+    --bbfl-legacy-video-columns: 5;            /* 旧版视频收藏夹列数 */
+    --bbfl-legacy-topic-columns: 3;            /* 旧版话题收藏夹列数 */
+    --bbfl-legacy-course-columns: 2;           /* 旧版课程收藏夹列数 */
+    --bbfl-legacy-list-row-gap: 20px;          /* 旧版内容列表的行间距 */
+    --bbfl-legacy-item-inline-margin: 5px;     /* 旧版视频条目左右外边距 */
+  } 
+}
