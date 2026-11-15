@@ -1,0 +1,61 @@
+/* ==========================================================================
+   在实时预览中折叠特定位置的空行,并在行号栏用横线标出被折叠的位置
+   - 需Obsidian 1.4+(使用原生CSS 嵌套与 :has())
+   - 配合插件Collapsed Line Marker时,横线数量会跟随下方行号的位数;
+     未启用插件时,横线固定显示为 "==="
+   ========================================================================== */
+
+
+/* ==================== 变量区 ==================== */
+
+body {
+  --collapsed-line-marker-color: hsl(258, 70%, 66%); /* 横线颜色 */
+  --collapsed-line-marker-offset: -0.55em;           /* 横线纵向位置(越小越靠上) */
+  --collapsed-line-marker-inset: 5px;                /* 横线距行号栏右边缘的距离 */
+  --collapsed-line-marker-weight: 600;               /* 横线粗细(字重) */
+}
+
+
+.markdown-source-view.mod-cm6.is-live-preview {
+
+  /* ==================== 空行折叠为0高度 ====================
+     - Callout、引用块、无序/有序列表、表格之后的空行
+     - 表格之前的空行
+     (光标所在行 .cm-active 保持原样,方便编辑) */
+  & :is(.cm-callout, .HyperMD-quote, .HyperMD-list-line, .cm-table-widget)
+      + .cm-line:has(> br:only-child):not(.cm-active),
+  & .cm-line:has(> br:only-child):not(.cm-active):has(+ .cm-table-widget) {
+    line-height: 0;
+    min-height: 0;
+    padding-block: 0;
+  }
+
+  /* ==================== Tab缩进内容之后的空行:直接移出布局 ==================== */
+  & .cm-line:has(.cm-indent)
+      + .cm-line:not(.cm-active):is(:empty, :has(> br:only-child)) {
+    display: none !important;
+  }
+
+  /* ==================== 行号栏:用横线代替被折叠行的行号 ====================
+     被折叠的行高度为 0,CodeMirror 会给它的行号元素写入 height: 0px。
+     隐藏它自己的数字,改在其位置画一条横线,
+     并上移到下一条可见行的行号上方。 */
+  & .cm-lineNumbers .cm-gutterElement[style*="height: 0px"] {
+    position: relative;
+    color: transparent !important;
+
+    &::before {
+      content: "===";
+      position: absolute;
+      top: var(--collapsed-line-marker-offset);
+      right: var(--collapsed-line-marker-inset);
+      z-index: 1;
+
+      color: var(--collapsed-line-marker-color);
+      font-size: inherit;
+      font-weight: var(--collapsed-line-marker-weight);
+      line-height: 1;
+      pointer-events: none;
+    }
+  }
+}
