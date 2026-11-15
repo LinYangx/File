@@ -1,0 +1,11 @@
+/*
+ * 覆盖「隐藏空行.css」里写死的 content: "===",
+ * 改为读取插件写入的 data-collapsed-marker(= 的数量跟随行号位数)。
+ * 选择器比原片段多一个属性选择器,优先级更高;插件被停用时自动回退到原片段的 "==="。
+ * 颜色、字号、位置等仍由「隐藏空行.css」中的变量控制。
+ */
+.markdown-source-view.mod-cm6.is-live-preview
+  .cm-lineNumbers
+  .cm-gutterElement[style*="height: 0px"][data-collapsed-marker]::before {
+  content: attr(data-collapsed-marker);
+}

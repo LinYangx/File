@@ -1,0 +1,9 @@
+{
+  "id": "collapsed-line-marker",
+  "name": "Collapsed Line Marker",
+  "version": "1.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "让「隐藏空行」产生的行号横线(===)跟随其下方可见行号的位数:1 位数显示 =,2 位数显示 ==,3 位数显示 ===,以此类推。",
+  "author": "you",
+  "isDesktopOnly": false
+}
