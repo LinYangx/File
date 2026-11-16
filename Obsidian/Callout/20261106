@@ -1,0 +1,96 @@
+/* =============== 取消全选 =============== */
+/* 锁定:展开状态的折叠型 callout */
+.is-live-preview .cm-embed-block:has(.callout.is-collapsible:not(.is-collapsed)) {
+  pointer-events: none !important;
+}
+
+/* 恢复:右上角 </> 按钮、标题栏(折叠/展开)、折叠箭头、链接 */
+.is-live-preview .cm-embed-block:has(.callout.is-collapsible:not(.is-collapsed)) :is(.edit-block-button, .callout-title, .callout-fold, a) {
+  pointer-events: auto !important;
+}
+
+/* =============== 折叠态Callout标题宽度 =============== */
+/* 右边缘对齐标题
+.callout.is-collapsed {
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: 0;
+  box-sizing: border-box;
+} */
+
+/* 左边缘对齐正文
+.markdown-source-view .callout.is-collapsed,
+.markdown-preview-view .callout.is-collapsed,
+.markdown-rendered .callout.is-collapsed {
+  margin-left: 0;
+  padding-left: 0;
+  border-left-width: 0;
+} */
+
+/* =============== 折叠态Callout紧凑 =============== */
+.callout.is-collapsed {
+  --callout-padding: 0 var(--size-4-3) 0 var(--size-4-4); /* 上下内边距归零 */
+  --callout-title-padding: 0;
+  --callout-title-size: 1em;
+  margin-top: 0.4em;
+  margin-bottom: 0.4em;
+}
+
+/* 标题行高度收紧 */
+.callout.is-collapsed .callout-title {
+  line-height: 1.7;
+  min-height: 0;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  gap: var(--size-4-1);
+}
+
+/* 缩小图标和折叠箭头，避免它们撑高标题行 */
+.callout.is-collapsed .callout-icon .svg-icon,
+.callout.is-collapsed .callout-fold .svg-icon {
+  width: 1em;
+  height: 1em;
+}
+
+/* 折叠时内容区不占空间 */
+.callout.is-collapsed .callout-content {
+  padding: 0;
+  margin: 0;
+}
+
+/* =============== Callout内的缩进代码块  =============== */
+.callout .callout-content > pre:not([class*="language-"]) {
+  /* 去掉虚线框、底纹 */
+  border: none;
+  background-image: none;
+  box-shadow: none;
+  border-radius: 0;
+
+  /* 左侧竖条:沿用嵌套引用的颜色 */
+  border-left: var(--blockquote-border-thickness, 3px) solid var(--blockquote-border-color, #8b5cf6);
+  background-color: var(--blockquote-background-color, rgba(139, 92, 246, 0.06));
+
+  padding: 0 0 0 2em;   /* 左侧 2em ≈ 列表缩进 */
+  margin: 0 0;
+}
+
+.callout .callout-content > pre:not([class*="language-"]) code {
+  font-family: var(--font-monospace);  /* 跟随 Obsidian 的等宽字体设置 */
+  font-size: 0.93em;
+  font-weight: 400;
+  color: hsl(0, 0%, 48%);
+  background: transparent;
+  padding: 0;
+  white-space: pre-wrap;
+}
+
+/* 隐藏复制按钮 */
+.callout .callout-content > pre:not([class*="language-"]) .copy-code-button {
+  display: none;
+}
+
+/* 只隐藏紧跟在缩进代码块后的 hr,其他分割线不受影响 */
+.callout .callout-content > pre:not([class*="language-"]) + hr {
+  display: none;
+}
