@@ -1,0 +1,220 @@
+/* Callout Tri-State Controls — Live Preview only */
+
+body {
+  /* 双按钮外框：可分别自定义颜色、粗细与线型。 */
+  --ctc-button-border-color: var(--background-modifier-border);
+  --ctc-button-border-width: 2px;
+  --ctc-button-border-style: solid;
+
+  /* 三种状态共用相同的按钮外部尺寸与间距。 */
+  --ctc-button-size: 22px;
+  --ctc-button-gap: 2px;
+}
+
+/* Suppress Obsidian tooltip popups without affecting Reading View. */
+body:has(.is-live-preview .ctc-controls:hover) .tooltip,
+body:has(.is-live-preview .cm-embed-block.cm-callout .callout-title:hover) .tooltip,
+body:has(.is-live-preview .cm-embed-block.cm-callout .callout-content:hover) .tooltip {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Disable Obsidian's native source button and fold arrow. */
+.is-live-preview .cm-embed-block.cm-callout .edit-block-button {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+.is-live-preview .cm-embed-block.cm-callout .callout-fold {
+  display: none !important;
+}
+
+/* Remove horizontal block-level whitespace while preserving vertical padding. */
+.is-live-preview .cm-embed-block.cm-callout,
+.is-live-preview .cm-embed-block.cm-callout > .markdown-rendered,
+.is-live-preview .cm-embed-block.cm-callout .callout,
+.is-live-preview .cm-embed-block.cm-callout .callout-title,
+.is-live-preview .cm-embed-block.cm-callout .callout-content {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.is-live-preview .cm-embed-block.cm-callout .callout-title > .callout-icon,
+.is-live-preview .cm-embed-block.cm-callout .callout-title > .callout-title-inner {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.is-live-preview .cm-embed-block.cm-callout .callout-title {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.is-live-preview .cm-embed-block.cm-callout .callout:has(> .callout-title > .callout-fold) > .callout-title {
+  cursor: pointer;
+}
+
+.is-live-preview .cm-embed-block.cm-callout .callout.ctc-inline-editing > .callout-title {
+  cursor: default;
+}
+
+/* Shared two-toggle control group. */
+.is-live-preview .ctc-controls {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: var(--ctc-button-gap);
+  box-sizing: border-box;
+  color: var(--text-muted);
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.is-live-preview .ctc-rendered-controls {
+  margin-left: auto !important;
+  padding-left: var(--size-4-1);
+  align-self: center;
+}
+
+.is-live-preview .ctc-toggle {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--ctc-button-size);
+  gap: 0;
+  width: var(--ctc-button-size);
+  min-width: var(--ctc-button-size);
+  max-width: var(--ctc-button-size);
+  height: var(--ctc-button-size);
+  min-height: var(--ctc-button-size);
+  max-height: var(--ctc-button-size);
+  margin: 0;
+  padding: 2px;
+  box-sizing: border-box;
+  border: var(--ctc-button-border-width) var(--ctc-button-border-style) var(--ctc-button-border-color);
+  border-radius: var(--radius-s, 4px);
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+  font-family: var(--font-interface);
+  font-size: 0;
+  font-weight: var(--font-normal);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.is-live-preview .ctc-toggle .ctc-toggle-label {
+  display: none !important;
+}
+
+.is-live-preview .ctc-toggle:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.is-live-preview .ctc-toggle.is-active,
+.is-live-preview .ctc-toggle[aria-pressed="true"] {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent, var(--text-normal));
+}
+
+.is-live-preview .ctc-toggle.is-active:hover,
+.is-live-preview .ctc-toggle[aria-pressed="true"]:hover {
+  background: var(--interactive-accent-hover, var(--interactive-accent));
+  color: var(--text-on-accent, var(--text-normal));
+}
+
+.is-live-preview .ctc-toggle:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 1px;
+}
+
+.is-live-preview .ctc-toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.is-live-preview .ctc-toggle-icon svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2px;
+}
+
+/* Inline source widget: floated into the first raw Markdown line, top-right. */
+.is-live-preview .ctc-source-controls {
+  float: right;
+  position: relative;
+  z-index: 5;
+  height: var(--ctc-button-size);
+  margin: 0 0 0 var(--size-4-2);
+  padding: 0;
+  border-radius: var(--radius-s, 4px);
+  background: transparent;
+  transform: none;
+}
+
+/* In-place editor: retain Obsidian's own .callout frame, icon and theme colors. */
+.is-live-preview .cm-embed-block.cm-callout .callout.ctc-inline-editing > .callout-title > .callout-title-inner {
+  display: none !important;
+}
+
+.is-live-preview .cm-embed-block.cm-callout .callout.ctc-inline-editing > .callout-content > :not(.ctc-body-input) {
+  display: none !important;
+}
+
+.is-live-preview .cm-embed-block.cm-callout .callout.ctc-inline-editing.is-collapsed > .callout-content {
+  display: block !important;
+}
+
+.is-live-preview .cm-embed-block.cm-callout .ctc-inline-input {
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-normal);
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  caret-color: var(--text-normal);
+}
+
+.is-live-preview .cm-embed-block.cm-callout .ctc-title-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0 0 2px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  font-weight: inherit;
+}
+
+.is-live-preview .cm-embed-block.cm-callout .ctc-title-input:focus {
+  border-bottom-color: var(--interactive-accent);
+}
+
+.is-live-preview .cm-embed-block.cm-callout .ctc-body-input {
+  display: block;
+  width: 100%;
+  min-height: 2.8em;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  resize: none;
+  white-space: pre-wrap;
+}
+
+.is-live-preview .cm-embed-block.cm-callout .ctc-inline-input:focus {
+  outline: none;
+  box-shadow: none;
+}
+

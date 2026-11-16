@@ -1,0 +1,9 @@
+{
+  "id": "callout-tri-state-controls",
+  "name": "Callout Tri-State Controls",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "在实时预览中为 Callout 提供锁定、就地编辑与源码三种互斥状态。",
+  "author": "Kimi",
+  "isDesktopOnly": false
+}

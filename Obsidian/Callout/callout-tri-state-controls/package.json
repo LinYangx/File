@@ -1,0 +1,20 @@
+{
+  "name": "callout-tri-state-controls",
+  "version": "1.0.0",
+  "description": "Three-state Callout controls for Obsidian Live Preview",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "check": "tsc -noEmit -skipLibCheck",
+    "build": "npm run check && esbuild main.ts --bundle --external:obsidian --external:@codemirror/state --external:@codemirror/view --format=cjs --platform=browser --target=es2021 --outfile=main.js",
+    "dev": "esbuild main.ts --bundle --external:obsidian --external:@codemirror/state --external:@codemirror/view --format=cjs --platform=browser --target=es2021 --sourcemap --watch --outfile=main.js"
+  },
+  "devDependencies": {
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.6",
+    "@types/node": "^22.15.17",
+    "esbuild": "^0.25.5",
+    "obsidian": "^1.11.4",
+    "typescript": "^5.8.3"
+  }
+}
