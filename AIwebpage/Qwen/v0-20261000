@@ -1,0 +1,231 @@
+// ==UserScript==
+// @name         Qwen网页阅览
+// @namespace    local.qwen.reading.tuner
+// @version      1.3
+// @description  在 chat.qwen.ai 右下角添加调节面板,可调段落宽度、段落间距、字间距、字号大小,附诊断按钮
+// @match        https://chat.qwen.ai/*
+// @grant        none
+// @run-at       document-idle
+// ==/UserScript==
+
+(function () {
+  'use strict';
+
+  const KEY = 'qwen-reading-tuner';
+  const DEFAULTS = { width: 900, space: 12, letter: 0, font: 16 };
+  let cfg = Object.assign({}, DEFAULTS);
+  try { Object.assign(cfg, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+
+  // ---------- 样式 ----------
+  const style = document.createElement('style');
+  document.head.appendChild(style);
+
+  function applyCss() {
+    style.textContent = `
+      .qwen-chat-message {
+        width: 100% !important;
+        max-width: min(${cfg.width}px, 100%) !important;
+      }
+      [data-rt-box] {
+        width: 100% !important;
+        max-width: min(${cfg.width}px, 100%) !important;
+      }
+      [data-rt-text] {
+        margin-bottom: ${cfg.space}px !important;
+        letter-spacing: ${cfg.letter}px !important;
+        font-size: ${cfg.font}px !important;
+      }
+      #rt-btn {
+        position: fixed; right: 16px; bottom: 16px; z-index: 99999;
+        width: 36px; height: 36px; border-radius: 50%; border: 1px solid #8884;
+        background: #fffd; color: #333; cursor: pointer; font-size: 16px;
+        box-shadow: 0 2px 8px #0003;
+      }
+      #rt-panel {
+        position: fixed; right: 16px; bottom: 60px; z-index: 99999;
+        width: 250px; padding: 12px 14px; border-radius: 10px;
+        background: #fffe; color: #222; border: 1px solid #8884;
+        box-shadow: 0 4px 16px #0003; font: 13px/1.4 system-ui, sans-serif;
+        display: none; backdrop-filter: blur(6px);
+      }
+      #rt-panel.open { display: block; }
+      #rt-panel label { display: flex; justify-content: space-between; margin-top: 8px; }
+      #rt-panel input[type=range] { width: 100%; }
+      #rt-panel button { margin-top: 10px; margin-right: 6px; cursor: pointer; }
+      #rt-diag { display: none; width: 100%; height: 120px; margin-top: 8px; font: 11px/1.3 monospace; }
+      @media (prefers-color-scheme: dark) {
+        #rt-btn { background: #333d; color: #eee; }
+        #rt-panel { background: #2a2a2ae8; color: #eee; }
+      }
+    `;
+  }
+
+  // ---------- 标记正文段落及其"限宽"祖先 ----------
+  const done = new WeakSet();
+  const SKIP = 'nav, aside, textarea, [role="dialog"], [role="menu"], #rt-panel, pre, code';
+
+  function limited(node) {
+    const mw = getComputedStyle(node).maxWidth;
+    // 只要设置了 max-width(px / calc / rem / ch / % 等),且不是 none 或 100%
+    return mw !== 'none' && mw !== '100%';
+  }
+
+  function markAncestors(el) {
+    let node = el.parentElement;
+    while (node && node !== document.body) {
+      if (limited(node)) node.setAttribute('data-rt-box', '1');
+      node = node.parentElement;
+    }
+  }
+
+  // 回答区:不依赖 p/li,凡是"直接含文字的块级元素"都当作正文
+  const ASSIST = '.qwen-chat-message:not(.qwen-chat-message-user)';
+  const NOTEXT = 'button, [role="button"], pre, code, svg, textarea, input, #rt-panel';
+
+  function scanAssistant() {
+    document.querySelectorAll(ASSIST + ' *').forEach((el) => {
+      if (done.has(el) || el.closest(NOTEXT)) return;
+      const hasText = Array.from(el.childNodes).some(
+        (n) => n.nodeType === 3 && n.textContent.trim()
+      );
+      if (!hasText) return;
+      const d = getComputedStyle(el).display;
+      if (d !== 'block' && d !== 'list-item') return;
+      done.add(el);
+      el.setAttribute('data-rt-text', '1');
+      markAncestors(el);
+    });
+  }
+
+  function scan() {
+    document.querySelectorAll('p, li, blockquote').forEach((el) => {
+      if (done.has(el) || el.closest(SKIP)) return;
+      done.add(el);
+      el.setAttribute('data-rt-text', '1');
+      markAncestors(el);
+    });
+    scanAssistant();
+  }
+
+  let timer;
+  new MutationObserver(() => {
+    clearTimeout(timer);
+    timer = setTimeout(scan, 300);
+  }).observe(document.body, { childList: true, subtree: true });
+
+  // ---------- 诊断 ----------
+  function describe(node) {
+    const cs = getComputedStyle(node);
+    const cls = (node.className && node.className.toString().trim().replace(/\s+/g, '.')) || '';
+    const inline = (node.getAttribute('style') || '').slice(0, 80);
+    return [
+      node.tagName.toLowerCase() + (cls ? '.' + cls : ''),
+      'mw=' + cs.maxWidth,
+      'w=' + cs.width,
+      'rect=' + Math.round(node.getBoundingClientRect().width),
+      'pad=' + cs.paddingLeft + '/' + cs.paddingRight,
+      'disp=' + cs.display,
+      node.hasAttribute('data-rt-box') ? 'MARKED' : '',
+      inline ? 'style="' + inline + '"' : '',
+    ].filter(Boolean).join(' | ');
+  }
+
+  function diagnose() {
+    const ps = Array.from(document.querySelectorAll('[data-rt-text]'));
+    const targets = ps.slice(-2); // 最后两个段落(通常是最新一条回答)
+    const lines = ['window=' + window.innerWidth];
+    targets.forEach((p, i) => {
+      lines.push('--- 段落 ' + (i + 1) + ': ' + p.textContent.slice(0, 20));
+      let node = p;
+      let guard = 0;
+      while (node && node !== document.body && guard++ < 25) {
+        lines.push(describe(node));
+        node = node.parentElement;
+      }
+    });
+    // 最后一条回答的内部结构(深度 ≤ 7,最多 80 个节点)
+    const msgs = document.querySelectorAll(ASSIST);
+    const last = msgs[msgs.length - 1];
+    lines.push('=== 回答区结构 (' + msgs.length + ' 条回答) ===');
+    if (last) {
+      lines.push(describe(last));
+      let count = 0;
+      (function walk(n, depth) {
+        for (const c of n.children) {
+          if (count++ > 80 || depth > 7) return;
+          const cls = (c.className && c.className.toString().trim().replace(/\s+/g, '.')) || '';
+          const t = Array.from(c.childNodes)
+            .filter((x) => x.nodeType === 3 && x.textContent.trim())
+            .map((x) => x.textContent.trim().slice(0, 8))[0];
+          lines.push(
+            '  '.repeat(depth) + c.tagName.toLowerCase() + (cls ? '.' + cls.slice(0, 70) : '') +
+            ' [' + getComputedStyle(c).display + (c.hasAttribute('data-rt-text') ? ',T' : '') + ']' +
+            (t ? ' "' + t + '"' : '')
+          );
+          walk(c, depth + 1);
+        }
+      })(last, 1);
+    }
+    const out = lines.join('\n');
+    const ta = panel.querySelector('#rt-diag');
+    ta.style.display = 'block';
+    ta.value = out;
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    console.log(out);
+  }
+
+  // ---------- 控制面板 ----------
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) {}
+    applyCss();
+  }
+
+  const btn = document.createElement('button');
+  btn.id = 'rt-btn';
+  btn.title = '阅读调节';
+  btn.textContent = 'Aa';
+
+  const panel = document.createElement('div');
+  panel.id = 'rt-panel';
+  panel.innerHTML = `
+    <label><span>段落宽度</span><span id="rt-v-width"></span></label>
+    <input type="range" id="rt-width" min="500" max="2400" step="20">
+    <label><span>段落间距</span><span id="rt-v-space"></span></label>
+    <input type="range" id="rt-space" min="-10" max="48" step="1">
+    <label><span>字间距</span><span id="rt-v-letter"></span></label>
+    <input type="range" id="rt-letter" min="-1" max="5" step="0.1">
+    <label><span>字号大小</span><span id="rt-v-font"></span></label>
+    <input type="range" id="rt-font" min="12" max="32" step="1">
+    <button id="rt-reset">重置</button><button id="rt-diag-btn">诊断</button>
+    <textarea id="rt-diag" readonly></textarea>
+  `;
+
+  function sync() {
+    for (const k of Object.keys(DEFAULTS)) {
+      panel.querySelector('#rt-' + k).value = cfg[k];
+      panel.querySelector('#rt-v-' + k).textContent = cfg[k] + 'px';
+    }
+  }
+
+  panel.addEventListener('input', (e) => {
+    const k = e.target.id && e.target.id.replace('rt-', '');
+    if (k in DEFAULTS) {
+      cfg[k] = parseFloat(e.target.value);
+      sync();
+      save();
+    }
+  });
+  panel.querySelector('#rt-reset').addEventListener('click', () => {
+    cfg = Object.assign({}, DEFAULTS);
+    sync();
+    save();
+  });
+  panel.querySelector('#rt-diag-btn').addEventListener('click', diagnose);
+  btn.addEventListener('click', () => panel.classList.toggle('open'));
+
+  document.body.append(btn, panel);
+  applyCss();
+  sync();
+  scan();
+})();
