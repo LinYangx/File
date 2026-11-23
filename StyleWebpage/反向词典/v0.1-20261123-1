@@ -1,0 +1,106 @@
+/* ==UserStyle==
+@name         反向词典
+@namespace    local.wantwords.ui-tweaks
+@version      0.1
+@description  隐藏指定区域、清除顶部空隙、统一方角；内容间距与搜索结果列数集中在代码顶部配置。
+@homepageURL  https://wantwords.net/
+@preprocessor default
+==/UserStyle== */
+
+@-moz-document domain("wantwords.net") {
+/* ======================================================================
+   配置区
+   ====================================================================== */
+    :root {
+        --ww-content-gap: 12px;   /* 标签栏与下方内容的间距 */
+        --ww-result-columns: 5;   /* 搜索结果列表列数 */
+    }
+
+/* ======================================================================
+   隐藏指定元素
+   ====================================================================== */
+    /* 顶部导航、标题、右侧按钮、反馈区、页脚。 */
+    nav.navbar-fixed-top,
+    .ui-tabs-panel > h1,
+    .home-side > .experience-new-version,
+    .home-side > .talk-new-version,
+    body > center[onclick="handleCloseNew()"],
+    body > footer {
+        display: none !important;
+    }
+
+    /* 清除固定导航及 #tabs 内联 top: 64px 留下的顶部空隙。 */
+    body {
+        padding-top: 0 !important;
+    }
+
+    #tabs.ui-tabs {
+        top: 0 !important;
+        margin-top: 0 !important;
+        padding: 0 !important;
+    }
+
+    #tabs.ui-tabs > .ui-tabs-nav {
+        margin-top: 0 !important;
+    }
+
+    /* 清除标题前后的换行；保留搜索框与筛选栏之间的原有换行。 */
+    .ui-tabs-panel > br:first-child,
+    .ui-tabs-panel > h1 + br,
+    .ui-tabs-panel > h1 + br + br,
+    .ui-tabs-panel > h1 + br + br + br,
+    .ui-tabs-panel > h1 + br + br + br + br,
+    #tabs > br {
+        display: none !important;
+    }
+
+    .ui-tabs-panel {
+        padding-top: 0 !important;
+    }
+
+    /* 标签栏与搜索框之间的上下间距。 */
+    .ui-tabs-panel > .row.elem-center:first-of-type {
+        margin-top: var(--ww-content-gap) !important;
+    }
+
+/* ======================================================================
+   方角
+   ====================================================================== */
+    *,
+    *::before,
+    *::after {
+        border-radius: 0 !important;
+    }
+
+/* ======================================================================
+    搜索结果列表
+    原站每20个词条生成一个Bootstrap列容器;展开这些容器后,使用CSS多栏按"从上到下,再从左到右"的顺序重排全部词条
+   ====================================================================== */
+    /*
+       3. 搜索结果列数。
+       。
+    */
+    .result .container > .row {
+        display: block !important;
+        column-count: var(--ww-result-columns);
+        column-gap: 5px;
+        column-fill: balance;
+    }
+
+    .result .container > .row::before,
+    .result .container > .row::after {
+        display: none !important;
+    }
+
+    .result .container > .row > div[class^="col-"],
+    .result .container > .row > div[class^="col-"] > ol {
+        display: contents !important;
+    }
+
+    .result .container > .row li {
+        -webkit-column-break-inside: avoid;
+        break-inside: avoid;
+        list-style-position: inside;
+        page-break-inside: avoid;
+    }
+}
