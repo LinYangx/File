@@ -1,0 +1,216 @@
+/* ======================================================================
+   变量区
+   ====================================================================== */
+body {
+  /* ========== note ========== */
+  --note-title-color: #666;
+  --note-bg-color: #000;
+  --note-icon-display: none;
+
+  /* ========== abstract/summary/tldr ========== */
+  --abstract-title-color: hsl(199, 100%, 50%);
+  --abstract-bg-color: hsla(199, 100%, 50%, 0.1);
+  --abstract-icon-display: none;
+
+  /* ========== info ========== */
+  --info-title-color: #666;
+  --info-bg-color: #000;
+  --info-icon-display: none;
+
+  /* ========== todo ========== */
+  --todo-title-color: hsl(188, 100%, 42%);
+  --todo-bg-color: hsla(188, 100%, 42%, 0.1);
+  --todo-icon-display: none;
+
+  /* ========== tip/hint/important ========== */
+  --tip-title-color: hsl(172, 100%, 37%);
+  --tip-bg-color: hsla(172, 100%, 37%, 0.1);  
+  --tip-icon-display: none;
+
+  /* ========== success/check/done ========== */
+  --success-title-color: hsl(144, 92%, 38%);
+  --success-bg-color: hsla(144, 92%, 38%, 0.1);
+  --success-icon-display: none;
+
+  /* ========== question/help/faq ========== */
+  --warning-title-color: hsl(30, 100%, 46%);
+  --warning-bg-color: hsla(30, 100%, 46%, 0.1);  
+  --question-icon-display: none;
+
+  /* ========== warning/caution/attention ========== */
+  --warning-title-color: hsl(30, 100%, 46%);
+  --warning-bg-color: hsla(30, 100%, 46%, 0.1);  
+  --warning-icon-display: none;
+
+  /* ========== failure/fail/missing ========== */
+  --failure-title-color: hsl(353, 81%, 55%);
+  --failure-bg-color: hsla(353, 81%, 55%, 0.1);
+  --failure-icon-display: flex;
+
+  /* ========== danger/error ========== */
+  --danger-title-color: hsl(353, 81%, 55%);
+  --danger-bg-color: hsla(353, 81%, 55%, 0.1);
+  --danger-icon-display: flex;
+
+  /* ========== bug ========== */
+  --bug-title-color: hsl(353, 81%, 55%);
+  --bug-bg-color: hsla(353, 81%, 55%, 0.1);
+  --bug-icon-display: flex;
+  
+  /* ========== example ========== */
+  --example-title-color: hsl(255, 82%, 63%);
+  --example-bg-color: hsl(255, 82%, 63%, 0.1);
+  --example-icon-display: flex;
+
+  /* ========== quote/cite ========== */
+  --quote-title-color: #666;
+  --quote-bg-color: #000;
+  --quote-icon-display: none;
+}
+
+
+/* ======================================================================
+   规则区
+   ====================================================================== */
+/* ========== note ========== */
+.callout[data-callout="note"] {
+  background-color: var(--note-bg-color);
+}
+.callout[data-callout="note"] :is(.callout-title-inner, .callout-icon, .callout-fold) {
+  color: var(--note-title-color);
+}
+.callout[data-callout="note"] .callout-icon {
+  display: var(--note-icon-display);
+}
+
+/* ========== abstract/summary/tldr ========== */
+.callout:is([data-callout="abstract"], [data-callout="summary"], [data-callout="tldr"]) {
+  background-color: var(--abstract-bg-color);
+}
+.callout:is([data-callout="abstract"], [data-callout="summary"], [data-callout="tldr"]) :is(.callout-title-inner, .callout-icon, .callout-fold) {
+  color: var(--abstract-title-color);
+}
+.callout:is([data-callout="abstract"], [data-callout="summary"], [data-callout="tldr"]) .callout-icon {
+  display: var(--abstract-icon-display);
+}
+
+/* ========== info ========== */
+.callout[data-callout="info"] {
+  background-color: var(--info-bg-color);
+}
+.callout[data-callout="info"] :is(.callout-title-inner, .callout-icon, .callout-fold) {
+  color: var(--info-title-color);
+}
+.callout[data-callout="info"] .callout-icon {
+  display: var(--info-icon-display);
+}
+
+/* ========== todo ========== */
+.callout[data-callout="todo"] {
+  background-color: var(--todo-bg-color);
+}
+.callout[data-callout="todo"] :is(.callout-title-inner, .callout-icon, .callout-fold) {
+  color: var(--todo-title-color);
+}
+.callout[data-callout="todo"] .callout-icon {
+  display: var(--todo-icon-display);
+}
+
+/* ========== tip/hint/important ========== */
+.callout:is([data-callout="tip"], [data-callout="hint"], [data-callout="important"]) {
+  background-color: var(--tip-bg-color);
+}
+.callout:is([data-callout="tip"], [data-callout="hint"], [data-callout="important"]) :is(.callout-title-inner, .callout-icon, .callout-fold) {
+  color: var(--tip-title-color);
+}
+.callout:is([data-callout="tip"], [data-callout="hint"], [data-callout="important"]) .callout-icon {
+  display: var(--tip-icon-display);
+}
+
+/* ========== success/check/done ========== */
+.callout:is([data-callout="success"], [data-callout="check"], [data-callout="done"]) {
+  background-color: var(--success-bg-color);
+}
+.callout:is([data-callout="success"], [data-callout="check"], [data-callout="done"]) :is(.callout-title-inner, .callout-icon, .callout-fold) {
+  color: var(--success-title-color);
+}
+.callout:is([data-callout="success"], [data-callout="check"], [data-callout="done"]) .callout-icon {
+  display: var(--success-icon-display);
+}
+
+/* ========== question/help/faq ========== */
+.callout:is([data-callout="question"], [data-callout="help"], [data-callout="faq"]) {
+  background-color: var(--question-bg-color);
+}
+.callout:is([data-callout="question"], [data-callout="help"], [data-callout="faq"]) :is(.callout-title-inner, .callout-icon, .callout-fold) {
+  color: var(--question-title-color);
+}
+.callout:is([data-callout="question"], [data-callout="help"], [data-callout="faq"]) .callout-icon {
+  display: var(--question-icon-display);
+}
+
+/* ========== warning/caution/attention ========== */
+.callout:is([data-callout="warning"], [data-callout="caution"], [data-callout="attention"]) {
+  background-color: var(--warning-bg-color);
+}
+.callout:is([data-callout="warning"], [data-callout="caution"], [data-callout="attention"]) :is(.callout-title-inner, .callout-icon, .callout-fold) {
+  color: var(--warning-title-color);
+}
+.callout:is([data-callout="warning"], [data-callout="caution"], [data-callout="attention"]) .callout-icon {
+  display: var(--warning-icon-display);
+}
+
+/* ========== failure/fail/missing ========== */
+.callout:is([data-callout="failure"], [data-callout="fail"], [data-callout="missing"]) {
+  background-color: var(--failure-bg-color);
+}
+.callout:is([data-callout="failure"], [data-callout="fail"], [data-callout="missing"]) :is(.callout-title-inner, .callout-icon, .callout-fold) {
+  color: var(--failure-title-color);
+}
+.callout:is([data-callout="failure"], [data-callout="fail"], [data-callout="missing"]) .callout-icon {
+  display: var(--failure-icon-display);
+}
+
+/* ========== danger/error ========== */
+.callout:is([data-callout="danger"], [data-callout="error"]) {
+  background-color: var(--danger-bg-color);
+}
+.callout:is([data-callout="danger"], [data-callout="error"]) :is(.callout-title-inner, .callout-icon, .callout-fold) {
+  color: var(--danger-title-color);
+}
+.callout:is([data-callout="danger"], [data-callout="error"]) .callout-icon {
+  display: var(--danger-icon-display);
+}
+
+/* ========== bug ========== */
+.callout[data-callout="bug"] {
+  background-color: var(--bug-bg-color);
+}
+.callout[data-callout="bug"] :is(.callout-title-inner, .callout-icon, .callout-fold) {
+  color: var(--bug-title-color);
+}
+.callout[data-callout="bug"] .callout-icon {
+  display: var(--bug-icon-display);
+}
+
+/* ========== example ========== */
+.callout[data-callout="example"] {
+  background-color: var(--example-bg-color);
+}
+.callout[data-callout="example"] :is(.callout-title-inner, .callout-icon, .callout-fold) {
+  color: var(--example-title-color);
+}
+.callout[data-callout="example"] .callout-icon {
+  display: var(--example-icon-display);
+}
+
+/* ========== quote/cite ========== */
+.callout:is([data-callout="quote"], [data-callout="cite"]) {
+  background-color: var(--quote-bg-color);
+}
+.callout:is([data-callout="quote"], [data-callout="cite"]) :is(.callout-title-inner, .callout-icon, .callout-fold) {
+  color: var(--quote-title-color);
+}
+.callout:is([data-callout="quote"], [data-callout="cite"]) .callout-icon {
+  display: var(--quote-icon-display);
+}
