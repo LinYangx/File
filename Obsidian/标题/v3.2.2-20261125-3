@@ -1,0 +1,259 @@
+/* ================================================================================
+   变量区
+   ================================================================================ */
+body {
+  /* ==================== 色块 ==================== */
+  --h1-block-bg: hsla(260, 80%, 50%, 0.99);
+  --h2-block-bg: hsla(360, 80%, 36%, 0.99);
+  --h3-block-bg: hsla(50, 100%, 50%, 0.66);
+  --h4-block-bg: hsla(140, 60%, 50%, 0.66);
+  /* 文字亮度 */
+  --h1-block-text: hsl(0, 0%, 70%);
+  --h2-block-text: hsl(0, 0%, 70%);
+  --h3-block-text: hsl(0, 0%, 0%);
+  --h4-block-text: hsl(0, 0%, 0%);
+  /* 标题水平偏移 */
+  --h1-block-pad-x: 0.2em;
+  --h2-block-pad-x: 0.2em;
+  --h3-block-pad-x: 0.1em;
+  --h4-block-pad-x: 0.1em;
+
+  /* ==================== 色条 ==================== */
+  --h5-bar-color: hsla(140, 60%, 50%, 0.66);
+  --h6-bar-color: hsla(360, 80%, 36%, 0.99);
+  /* 样式 */
+  --bar-width: 6px;
+  --bar-height: 1em;
+  --bar-radius: 0px;
+  --bar-gap: 2px;
+  --bar-offset-y: -0.1em;
+
+  /* ==================== 前导符 ==================== */
+  /* H1 */
+  --h1-leader-color: var(--h1-block-bg);
+  --h1-leader-thickness: 3px;
+  --h1-leader-gap: 0;
+  --h1-leader-min-width: 2em;
+  --h1-leader-opacity: 1;
+  --h1-leader-live-offset-y: -100%;
+  /* H2 */
+  --h2-leader-color: var(--h2-block-bg);
+  --h2-leader-thickness: 3px;
+  --h2-leader-gap: 0;
+  --h2-leader-min-width: 2em;
+  --h2-leader-opacity: var(--h1-leader-opacity);
+  --h2-leader-live-offset-y: 0%;
+  
+  /* ==================== 标题上下留白 ==================== */
+  /* H2 */
+  --h2-space-top: 0.2em;
+  --h2-space-bottom: 0.05em;
+  /* H3 */
+  --h3-space-top: 0.2em;
+  --h3-space-bottom: 0em;
+
+  /* ==================== 折叠箭头 ==================== */
+  --fold-opacity: 0;
+  --fold-opacity-hover: 1;
+  --fold-fade: 120ms;
+}
+
+
+/* ================================================================================
+   规则区
+   ================================================================================ */
+/* ======================================================================
+   级别映射
+   ====================================================================== */
+/* 将各级变量映射为内部别名(--_ 前缀),供下方通用规则统一消费 */
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-1,
+.markdown-rendered h1 {
+  --_block-bg: var(--h1-block-bg);
+  --_block-text: var(--h1-block-text);
+  --_block-pad-x: var(--h1-block-pad-x);
+  --_leader-color: var(--h1-leader-color);
+  --_leader-thickness: var(--h1-leader-thickness);
+  --_leader-gap: var(--h1-leader-gap);
+  --_leader-min-width: var(--h1-leader-min-width);
+  --_leader-opacity: var(--h1-leader-opacity);
+}
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-2,
+.markdown-rendered h2 {
+  --_block-bg: var(--h2-block-bg);
+  --_block-text: var(--h2-block-text);
+  --_block-pad-x: var(--h2-block-pad-x);
+  --_leader-color: var(--h2-leader-color);
+  --_leader-thickness: var(--h2-leader-thickness);
+  --_leader-gap: var(--h2-leader-gap);
+  --_leader-min-width: var(--h2-leader-min-width);
+  --_leader-opacity: var(--h2-leader-opacity);
+}
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-3,
+.markdown-rendered h3 {
+  --_block-bg: var(--h3-block-bg);
+  --_block-text: var(--h3-block-text);
+  --_block-pad-x: var(--h3-block-pad-x);
+}
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-4,
+.markdown-rendered h4 {
+  --_block-bg: var(--h4-block-bg);
+  --_block-text: var(--h4-block-text);
+  --_block-pad-x: var(--h4-block-pad-x);
+}
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-5,
+.markdown-rendered h5 {
+  --_bar-color: var(--h5-bar-color);
+}
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-6,
+.markdown-rendered h6 {
+  --_bar-color: var(--h6-bar-color);
+}
+
+/* ======================================================================
+   色块
+   ====================================================================== */
+/* 【实时预览】inline片段,换行时逐行克隆背景与内边距 */
+.markdown-source-view.mod-cm6
+  .cm-line:is(.HyperMD-header-1, .HyperMD-header-2, .HyperMD-header-3, .HyperMD-header-4)
+  :is(.cm-header-1, .cm-header-2, .cm-header-3, .cm-header-4) {
+  background: var(--_block-bg);
+  color: var(--_block-text);
+  padding: 0 var(--_block-pad-x);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+/* 【阅读模式】色块包裹文字本身,宽度随内容 */
+.markdown-rendered :is(h1, h2, h3, h4) {
+  width: fit-content;
+  max-width: 100%;
+  background: var(--_block-bg);
+  color: var(--_block-text);
+  padding: 0 var(--_block-pad-x);
+}
+
+/* ======================================================================
+   色条
+   ====================================================================== */
+.markdown-source-view.mod-cm6 .cm-line:is(.HyperMD-header-5, .HyperMD-header-6)::before,
+.markdown-rendered :is(h5, h6)::before {
+  content: "";
+  display: inline-block;
+  width: var(--bar-width);
+  height: var(--bar-height);
+  border-radius: var(--bar-radius);
+  margin-right: var(--bar-gap);
+  vertical-align: var(--bar-offset-y);
+  background: var(--_bar-color);
+}
+
+/* ======================================================================
+   标题上下留白
+   ====================================================================== */
+/* 实时预览 */
+.markdown-source-view.mod-cm6 .HyperMD-header-2 {
+  padding-top: var(--h2-space-top);
+  padding-bottom: var(--h2-space-bottom);
+}
+.markdown-source-view.mod-cm6 .HyperMD-header-3 {
+  padding-top: var(--h3-space-top);
+  padding-bottom: var(--h3-space-bottom);
+}
+
+/* ====================================================================== 
+   前导符：标题布局
+   ======================================================================
+   实时预览保持 CodeMirror 编辑行为；阅读模式使用弹性布局 */
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-1,
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-2 {
+  display: block;
+  position: relative;
+}
+
+.markdown-rendered h1,
+.markdown-rendered h2 {
+  display: flex;
+  align-items: center;
+}
+
+/* ====================================================================== 
+   前导符：实时预览
+   ====================================================================== */
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-1::after {
+  content: "";
+  position: absolute;
+  position-anchor: --heading-text;
+  /* 锚定标题文字色块底部,而非整个 .cm-line 的底部 */
+  top: anchor(bottom);
+  right: 0;
+  left: anchor(right);
+  min-width: var(--h1-leader-min-width);
+  margin-left: var(--h1-leader-gap);
+  border-top: var(--h1-leader-thickness) solid var(--h1-leader-color);
+  opacity: var(--h1-leader-opacity);
+  /* 让前导符中心线与色块底边重合 */
+  transform: translateY(var(--h1-leader-live-offset-y));
+  pointer-events: none;
+}
+
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-2::after {
+  content: "";
+  position: absolute;
+  position-anchor: --heading-text-h2;
+  /* 锚定标题文字色块顶部,而非整个 .cm-line 的顶部 */
+  top: anchor(top);
+  right: 0;
+  left: anchor(right);
+  min-width: var(--h2-leader-min-width);
+  margin-left: var(--h2-leader-gap);
+  border-top: var(--h2-leader-thickness) solid var(--h2-leader-color);
+  opacity: var(--h2-leader-opacity);
+  /* 让前导符中心线与色块顶边重合 */
+  transform: translateY(var(--h2-leader-live-offset-y));
+  pointer-events: none;
+}
+
+/* ====================================================================== 
+   前导符：阅读模式
+   ====================================================================== */
+.markdown-rendered h1::after {
+  content: "";
+  flex: 1 1 auto;
+  min-width: var(--h1-leader-min-width);
+  margin-left: var(--h1-leader-gap);
+  border-top: var(--h1-leader-thickness) solid var(--h1-leader-color);
+  opacity: var(--h1-leader-opacity);
+}
+
+.markdown-rendered h2::after {
+  content: "";
+  flex: 1 1 auto;
+  min-width: var(--h2-leader-min-width);
+  margin-left: var(--h2-leader-gap);
+  border-top: var(--h2-leader-thickness) solid var(--h2-leader-color);
+  opacity: var(--h2-leader-opacity);
+}
+
+/* ====================================================================== 
+   前导符：实时预览锚点
+   ====================================================================== */
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-1 .cm-header-1 {
+  anchor-name: --heading-text;
+}
+
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-2 .cm-header-2 {
+  anchor-name: --heading-text-h2;
+}
+
+/* ======================================================================
+   折叠箭头
+   ====================================================================== */
+/* 平时隐藏,悬停显现 */
+.cm-fold-indicator,
+.markdown-reading-view .collapse-indicator {
+  opacity: var(--fold-opacity);
+  transition: opacity var(--fold-fade) ease;
+}
+.cm-fold-indicator:hover,
+.markdown-reading-view .collapse-indicator:hover {
+  opacity: var(--fold-opacity-hover);
+}
