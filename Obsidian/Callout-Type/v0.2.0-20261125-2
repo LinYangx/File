@@ -1,0 +1,282 @@
+/* ======================================================================
+   变量区
+   ====================================================================== */
+body {
+  /* ========== 图标通用默认值 ========== */
+  /* 所有类型的图标粗细默认值,改这一处即可全局调整;各类型可在下方单独覆盖 */
+  --callout-icon-stroke-width-default: 2px;
+
+  /* ========== note ========== */
+  --note-title-color: #666;
+  --note-bg-color: #000;
+  --note-icon-display: none;
+  --note-icon-color: var(--note-title-color);
+  --note-icon-stroke-width: var(--callout-icon-stroke-width-default);
+
+  /* ========== abstract/summary/tldr ========== */
+  --abstract-title-color: hsl(199, 100%, 50%);
+  --abstract-bg-color: hsla(199, 100%, 50%, 0.1);
+  --abstract-icon-display: none;
+  --abstract-icon-color: var(--abstract-title-color);
+  --abstract-icon-stroke-width: var(--callout-icon-stroke-width-default);
+
+  /* ========== info ========== */
+  --info-title-color: #666;
+  --info-bg-color: #000;
+  --info-icon-display: none;
+  --info-icon-color: var(--info-title-color);
+  --info-icon-stroke-width: var(--callout-icon-stroke-width-default);
+
+  /* ========== todo ========== */
+  --todo-title-color: hsl(188, 100%, 42%);
+  --todo-bg-color: hsla(188, 100%, 42%, 0.1);
+  --todo-icon-display: none;
+  --todo-icon-color: var(--todo-title-color);
+  --todo-icon-stroke-width: var(--callout-icon-stroke-width-default);
+
+  /* ========== tip/hint/important ========== */
+  --tip-title-color: hsl(172, 100%, 37%);
+  --tip-bg-color: hsla(172, 100%, 37%, 0.1);
+  --tip-icon-display: none;
+  --tip-icon-color: var(--tip-title-color);
+  --tip-icon-stroke-width: var(--callout-icon-stroke-width-default);
+
+  /* ========== success/check/done ========== */
+  --success-title-color: hsl(144, 92%, 38%);
+  --success-bg-color: hsla(144, 92%, 38%, 0.1);
+  --success-icon-display: none;
+  --success-icon-color: var(--success-title-color);
+  --success-icon-stroke-width: var(--callout-icon-stroke-width-default);
+
+  /* ========== question/help/faq ========== */
+  --question-title-color: hsl(30, 100%, 46%);
+  --question-bg-color: hsla(30, 100%, 46%, 0.1);
+  --question-icon-display: none;
+  --question-icon-color: var(--question-title-color);
+  --question-icon-stroke-width: var(--callout-icon-stroke-width-default);
+
+  /* ========== warning/caution/attention ========== */
+  --warning-title-color: hsl(30, 100%, 46%);
+  --warning-bg-color: hsla(30, 100%, 46%, 0.1);
+  --warning-icon-display: none;
+  --warning-icon-color: var(--warning-title-color);
+  --warning-icon-stroke-width: var(--callout-icon-stroke-width-default);
+
+  /* ========== failure/fail/missing ========== */
+  --failure-title-color: hsl(353, 81%, 55%);
+  --failure-bg-color: hsla(353, 81%, 55%, 0.1);
+  --failure-icon-display: flex;
+  --failure-icon-color: var(--failure-title-color);
+  --failure-icon-stroke-width: var(--callout-icon-stroke-width-default);
+
+  /* ========== danger/error ========== */
+  --danger-title-color: hsl(353, 81%, 55%);
+  --danger-bg-color: hsla(353, 81%, 55%, 0.1);
+  --danger-icon-display: flex;
+  --danger-icon-color: var(--danger-title-color);
+  --danger-icon-stroke-width: var(--callout-icon-stroke-width-default);
+
+  /* ========== bug ========== */
+  --bug-title-color: hsl(353, 81%, 55%);
+  --bug-bg-color: hsla(353, 81%, 55%, 0.1);
+  --bug-icon-display: flex;
+  --bug-icon-color: var(--bug-title-color);
+  --bug-icon-stroke-width: var(--callout-icon-stroke-width-default);
+
+  /* ========== example ========== */
+  --example-title-color: hsl(255, 82%, 63%);
+  --example-bg-color: hsl(255, 82%, 63%, 0.1);
+  --example-icon-display: flex;
+  --example-icon-color: var(--example-title-color);
+  --example-icon-stroke-width: var(--callout-icon-stroke-width-default);
+
+  /* ========== quote/cite ========== */
+  --quote-title-color: #666;
+  --quote-bg-color: #000;
+  --quote-icon-display: none;
+  --quote-icon-color: var(--quote-title-color);
+  --quote-icon-stroke-width: var(--callout-icon-stroke-width-default);
+}
+
+
+/* ======================================================================
+   规则区
+   ====================================================================== */
+
+/* ========== 图标通用规则 ==========
+   各类型规则会在 .callout-icon 上设置 --current-icon-color / --current-icon-stroke-width,
+   这里统一作用到 svg 上(直接写在 svg 上才能覆盖 Obsidian 自带的 color / stroke-width)。
+   未定义的类型(如自定义 callout)会回退到 Obsidian 默认值。 */
+.callout .callout-icon :is(.svg-icon, svg) {
+  color: var(--current-icon-color, rgb(var(--callout-color)));
+  stroke-width: var(--current-icon-stroke-width, var(--icon-stroke));
+}
+
+/* ========== note ========== */
+.callout[data-callout="note"] {
+  background-color: var(--note-bg-color);
+}
+.callout[data-callout="note"] :is(.callout-title-inner, .callout-fold) {
+  color: var(--note-title-color);
+}
+.callout[data-callout="note"] .callout-icon {
+  display: var(--note-icon-display);
+  --current-icon-color: var(--note-icon-color);
+  --current-icon-stroke-width: var(--note-icon-stroke-width);
+}
+
+/* ========== abstract/summary/tldr ========== */
+.callout:is([data-callout="abstract"], [data-callout="summary"], [data-callout="tldr"]) {
+  background-color: var(--abstract-bg-color);
+}
+.callout:is([data-callout="abstract"], [data-callout="summary"], [data-callout="tldr"]) :is(.callout-title-inner, .callout-fold) {
+  color: var(--abstract-title-color);
+}
+.callout:is([data-callout="abstract"], [data-callout="summary"], [data-callout="tldr"]) .callout-icon {
+  display: var(--abstract-icon-display);
+  --current-icon-color: var(--abstract-icon-color);
+  --current-icon-stroke-width: var(--abstract-icon-stroke-width);
+}
+
+/* ========== info ========== */
+.callout[data-callout="info"] {
+  background-color: var(--info-bg-color);
+}
+.callout[data-callout="info"] :is(.callout-title-inner, .callout-fold) {
+  color: var(--info-title-color);
+}
+.callout[data-callout="info"] .callout-icon {
+  display: var(--info-icon-display);
+  --current-icon-color: var(--info-icon-color);
+  --current-icon-stroke-width: var(--info-icon-stroke-width);
+}
+
+/* ========== todo ========== */
+.callout[data-callout="todo"] {
+  background-color: var(--todo-bg-color);
+}
+.callout[data-callout="todo"] :is(.callout-title-inner, .callout-fold) {
+  color: var(--todo-title-color);
+}
+.callout[data-callout="todo"] .callout-icon {
+  display: var(--todo-icon-display);
+  --current-icon-color: var(--todo-icon-color);
+  --current-icon-stroke-width: var(--todo-icon-stroke-width);
+}
+
+/* ========== tip/hint/important ========== */
+.callout:is([data-callout="tip"], [data-callout="hint"], [data-callout="important"]) {
+  background-color: var(--tip-bg-color);
+}
+.callout:is([data-callout="tip"], [data-callout="hint"], [data-callout="important"]) :is(.callout-title-inner, .callout-fold) {
+  color: var(--tip-title-color);
+}
+.callout:is([data-callout="tip"], [data-callout="hint"], [data-callout="important"]) .callout-icon {
+  display: var(--tip-icon-display);
+  --current-icon-color: var(--tip-icon-color);
+  --current-icon-stroke-width: var(--tip-icon-stroke-width);
+}
+
+/* ========== success/check/done ========== */
+.callout:is([data-callout="success"], [data-callout="check"], [data-callout="done"]) {
+  background-color: var(--success-bg-color);
+}
+.callout:is([data-callout="success"], [data-callout="check"], [data-callout="done"]) :is(.callout-title-inner, .callout-fold) {
+  color: var(--success-title-color);
+}
+.callout:is([data-callout="success"], [data-callout="check"], [data-callout="done"]) .callout-icon {
+  display: var(--success-icon-display);
+  --current-icon-color: var(--success-icon-color);
+  --current-icon-stroke-width: var(--success-icon-stroke-width);
+}
+
+/* ========== question/help/faq ========== */
+.callout:is([data-callout="question"], [data-callout="help"], [data-callout="faq"]) {
+  background-color: var(--question-bg-color);
+}
+.callout:is([data-callout="question"], [data-callout="help"], [data-callout="faq"]) :is(.callout-title-inner, .callout-fold) {
+  color: var(--question-title-color);
+}
+.callout:is([data-callout="question"], [data-callout="help"], [data-callout="faq"]) .callout-icon {
+  display: var(--question-icon-display);
+  --current-icon-color: var(--question-icon-color);
+  --current-icon-stroke-width: var(--question-icon-stroke-width);
+}
+
+/* ========== warning/caution/attention ========== */
+.callout:is([data-callout="warning"], [data-callout="caution"], [data-callout="attention"]) {
+  background-color: var(--warning-bg-color);
+}
+.callout:is([data-callout="warning"], [data-callout="caution"], [data-callout="attention"]) :is(.callout-title-inner, .callout-fold) {
+  color: var(--warning-title-color);
+}
+.callout:is([data-callout="warning"], [data-callout="caution"], [data-callout="attention"]) .callout-icon {
+  display: var(--warning-icon-display);
+  --current-icon-color: var(--warning-icon-color);
+  --current-icon-stroke-width: var(--warning-icon-stroke-width);
+}
+
+/* ========== failure/fail/missing ========== */
+.callout:is([data-callout="failure"], [data-callout="fail"], [data-callout="missing"]) {
+  background-color: var(--failure-bg-color);
+}
+.callout:is([data-callout="failure"], [data-callout="fail"], [data-callout="missing"]) :is(.callout-title-inner, .callout-fold) {
+  color: var(--failure-title-color);
+}
+.callout:is([data-callout="failure"], [data-callout="fail"], [data-callout="missing"]) .callout-icon {
+  display: var(--failure-icon-display);
+  --current-icon-color: var(--failure-icon-color);
+  --current-icon-stroke-width: var(--failure-icon-stroke-width);
+}
+
+/* ========== danger/error ========== */
+.callout:is([data-callout="danger"], [data-callout="error"]) {
+  background-color: var(--danger-bg-color);
+}
+.callout:is([data-callout="danger"], [data-callout="error"]) :is(.callout-title-inner, .callout-fold) {
+  color: var(--danger-title-color);
+}
+.callout:is([data-callout="danger"], [data-callout="error"]) .callout-icon {
+  display: var(--danger-icon-display);
+  --current-icon-color: var(--danger-icon-color);
+  --current-icon-stroke-width: var(--danger-icon-stroke-width);
+}
+
+/* ========== bug ========== */
+.callout[data-callout="bug"] {
+  background-color: var(--bug-bg-color);
+}
+.callout[data-callout="bug"] :is(.callout-title-inner, .callout-fold) {
+  color: var(--bug-title-color);
+}
+.callout[data-callout="bug"] .callout-icon {
+  display: var(--bug-icon-display);
+  --current-icon-color: var(--bug-icon-color);
+  --current-icon-stroke-width: var(--bug-icon-stroke-width);
+}
+
+/* ========== example ========== */
+.callout[data-callout="example"] {
+  background-color: var(--example-bg-color);
+}
+.callout[data-callout="example"] :is(.callout-title-inner, .callout-fold) {
+  color: var(--example-title-color);
+}
+.callout[data-callout="example"] .callout-icon {
+  display: var(--example-icon-display);
+  --current-icon-color: var(--example-icon-color);
+  --current-icon-stroke-width: var(--example-icon-stroke-width);
+}
+
+/* ========== quote/cite ========== */
+.callout:is([data-callout="quote"], [data-callout="cite"]) {
+  background-color: var(--quote-bg-color);
+}
+.callout:is([data-callout="quote"], [data-callout="cite"]) :is(.callout-title-inner, .callout-fold) {
+  color: var(--quote-title-color);
+}
+.callout:is([data-callout="quote"], [data-callout="cite"]) .callout-icon {
+  display: var(--quote-icon-display);
+  --current-icon-color: var(--quote-icon-color);
+  --current-icon-stroke-width: var(--quote-icon-stroke-width);
+}
