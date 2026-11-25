@@ -1,0 +1,29 @@
+/* ========== 1. 覆盖圆角变量(核心) ========== */
+body,
+body.theme-light,
+body.theme-dark {
+  --modal-radius: 0 !important;   /* 模态窗口 */
+  --radius-s: 0 !important;
+  --radius-m: 0 !important;
+  --radius-l: 0 !important;
+  --radius-xl: 0 !important;
+}
+
+/* ========== 2. 显式指定各类弹窗容器 ========== */
+.modal,
+.prompt,                    /* 命令面板、快速切换、Omnisearch 等 */
+.suggestion-container,      /* 各类建议/自动补全列表 */
+.menu,                      /* 右键菜单 */
+.popover,                   /* 悬浮预览 */
+.tooltip,                   /* 提示气泡 */
+.notice {                   /* 右上角通知 */
+  border-radius: 0 !important;
+}
+
+/* ========== 3. 弹窗内部元素(按钮、输入框、列表项等) ========== */
+.modal :where(*):not(.checkbox-container),
+.prompt :where(*),
+.menu :where(*),
+.suggestion-container :where(*) {
+  border-radius: 0 !important;
+}
