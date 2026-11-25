@@ -1,0 +1,111 @@
+/*
+ * Callout 标题栏垂直留白与折叠/展开零位移
+ * 本文件独立工作，同时适用于实时预览与阅读视图，不依赖任何插件。
+ */
+
+body {
+  /* 标题上方留白 */
+  --custom-callout-title-padding-top: 1px;
+  /* 标题下方留白 */
+  --custom-callout-title-padding-bottom: 1px;
+  /* 展开后内容区与标题栏之间的距离 */
+  --custom-callout-content-padding-top: 0px;
+  /* 展开后内容区底部留白 */
+  --custom-callout-content-padding-bottom: 0px;
+  /* 展开态内容区底部分割线 */
+  --custom-callout-content-divider-color: #555;
+  --custom-callout-content-divider-thickness: 2px;                    /* 粗细 */
+  --custom-callout-content-divider-style: solid;                         /* 线型 */
+  --custom-callout-content-divider-width: 100%;                      /* 长度 */
+  --custom-callout-content-divider-margin-top: 4px;
+  --custom-callout-content-divider-margin-bottom: 10px;        /* 两侧间距 */
+
+  /* 三种状态共用同一顶部边框宽度。默认与 Obsidian 原生 0px 一致；主题有边框时可改为 1px。 */
+  --custom-callout-border-top-width: 0px;
+
+  /* 固定标题行高与对齐基准；默认沿用 Obsidian 的紧凑行高变量。 */
+  --custom-callout-title-line-height: var(--line-height-tight);
+}
+
+/*
+ * 1. 外层容器不再拥有上下 padding，折叠态也不能重新引入。
+ * 2. 顶部边框不再随 is-collapsed 改变。
+ * 因而不存在“展开时标题被外层 padding 或边框向下推”的第二套盒模型。
+ */
+body .markdown-rendered .callout,
+body .markdown-rendered .callout.is-collapsed,
+body .markdown-rendered .callout:not(.is-collapsed) {
+  display: flow-root !important;
+  box-sizing: border-box;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border-top-width: var(--custom-callout-border-top-width) !important;
+}
+
+/*
+ * 标题栏是唯一控制标题上下留白的盒子。
+ * max() 将正值交给 padding；min() 将负值交给 margin，从而支持向负值做减法。
+ * 两条规则在不可折叠/折叠/展开三种状态下完全相同，仍保持零位移。
+ */
+body .markdown-rendered .callout > .callout-title,
+body .markdown-rendered .callout.is-collapsed > .callout-title,
+body .markdown-rendered .callout:not(.is-collapsed) > .callout-title {
+  box-sizing: border-box;
+  margin-top: min(0px, var(--custom-callout-title-padding-top)) !important;
+  margin-bottom: min(0px, var(--custom-callout-title-padding-bottom)) !important;
+  padding-top: max(0px, var(--custom-callout-title-padding-top)) !important;
+  padding-bottom: max(0px, var(--custom-callout-title-padding-bottom)) !important;
+  border-top-width: 0 !important;
+  line-height: var(--custom-callout-title-line-height) !important;
+  align-items: center !important;
+}
+
+/* 图标、文字和原生折叠箭头共用相同的行高与垂直对齐，不自带额外上下外边距。 */
+body .markdown-rendered .callout > .callout-title > .callout-icon,
+body .markdown-rendered .callout > .callout-title > .callout-title-inner,
+body .markdown-rendered .callout > .callout-title > .callout-fold {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  line-height: inherit !important;
+  align-self: center !important;
+}
+
+/*
+ * 内容区间距只在展开态参与布局。
+ * flow-root 建立独立块级格式化上下文，配合 first-child 的 margin-top: 0，
+ * 避免首段外边距折叠后穿过内容区并反推标题栏位置。
+ */
+body .markdown-rendered .callout:not(.is-collapsed) > .callout-content {
+  display: flow-root !important;
+  box-sizing: border-box;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: var(--custom-callout-content-padding-top) !important;
+  padding-bottom: var(--custom-callout-content-padding-bottom) !important;
+}
+
+body .markdown-rendered .callout > .callout-content > :first-child {
+  margin-top: 0 !important;
+}
+
+body .markdown-rendered .callout > .callout-content > :last-child {
+  margin-bottom: 0 !important;
+}
+
+/* 只给展开态追加底部分割线；折叠态没有伪元素，不参与标题盒模型计算。 */
+body .markdown-rendered .callout:not(.is-collapsed) > .callout-content::after {
+  content: "";
+  display: block;
+  box-sizing: border-box;
+  width: var(--custom-callout-content-divider-width);
+  height: 0;
+  margin-top: var(--custom-callout-content-divider-margin-top);
+  margin-right: auto;
+  margin-bottom: var(--custom-callout-content-divider-margin-bottom);
+  margin-left: auto;
+  border-top: var(--custom-callout-content-divider-thickness)
+    var(--custom-callout-content-divider-style)
+    var(--custom-callout-content-divider-color);
+  pointer-events: none;
+}
+
