@@ -1,0 +1,9 @@
+{
+  "id": "compact-book-title-marks",
+  "name": "Compact Book Title Marks",
+  "version": "1.0.0",
+  "minAppVersion": "1.0.0",
+  "description": "收紧中文书名号《》外侧的空隙，让视觉更紧凑。",
+  "author": "me",
+  "isDesktopOnly": false
+}

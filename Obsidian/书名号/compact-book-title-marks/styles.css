@@ -1,0 +1,14 @@
+/* 偏移量：数值越大（绝对值），空隙收得越紧。
+   如果出现《》与相邻文字重叠，把它改小，例如 -0.2em；
+   觉得还不够紧，就改大，例如 -0.45em。 */
+:root {
+  --book-title-mark-offset: -0.3em;
+}
+
+.cn-booktitle-left {
+  margin-left: var(--book-title-mark-offset);
+}
+
+.cn-booktitle-right {
+  margin-right: var(--book-title-mark-offset);
+}
