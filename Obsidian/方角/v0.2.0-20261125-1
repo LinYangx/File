@@ -1,0 +1,19 @@
+/*
+ * Obsidian Square Corners
+ * 将界面、编辑器、阅读视图及大多数插件的圆角统一改为方角
+ */
+
+/* 覆盖 Obsidian 默认圆角变量 */
+:root {
+  --radius-s: 0px;
+  --radius-m: 0px;
+  --radius-l: 0px;
+  --radius-xl: 0px;
+}
+
+/* 覆盖普通元素及伪元素 */
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
+}
