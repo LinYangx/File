@@ -1,0 +1,264 @@
+/* ======================================================================
+   色块
+   ====================================================================== */
+.theme-dark {
+/* 方块底色 */
+  --h1-block-bg: hsla(260, 80%, 50%, 0.99);
+  --h2-block-bg: hsla(360, 80%, 36%, 0.99);
+  --h3-block-bg: hsla(50, 100%, 50%, 0.66);
+  --h4-block-bg: hsla(140, 60%, 50%, 0.66);
+/* 文字基准色 */
+--h1-text-base: var(--text-normal);
+--h2-text-base: var(--text-normal);
+--h3-text-base: var(--text-normal);
+--h4-text-base: var(--text-normal);
+/* 文字亮度 */
+--h1-text-level: 90%;
+--h2-text-level: 90%;
+--h3-text-level: 0%;
+--h4-text-level: 0%;
+}
+
+/* H1方块(实时预览) */
+.theme-dark .cm-line.HyperMD-header-1 .cm-header-1 {
+background: var(--h1-block-bg);
+padding: 0em 0.2em;
+color: color-mix(in srgb, var(--h1-text-base) var(--h1-text-level), black);
+-webkit-box-decoration-break: clone;
+box-decoration-break: clone;
+}
+
+/* H2方块(实时预览) */
+.theme-dark .cm-line.HyperMD-header-2 .cm-header-2 {
+background: var(--h2-block-bg);
+padding: 0em 0.3em;
+color: color-mix(in srgb, var(--h2-text-base) var(--h2-text-level), black);
+-webkit-box-decoration-break: clone;
+box-decoration-break: clone;
+}
+
+/* H3方块(实时预览) */
+.theme-dark .cm-line.HyperMD-header-3 .cm-header-3 {
+background: var(--h3-block-bg);
+padding: 0em 0.1em;
+color: color-mix(in srgb, var(--h3-text-base) var(--h3-text-level), black);
+-webkit-box-decoration-break: clone;
+box-decoration-break: clone;
+}
+
+/* H4方块(实时预览) */
+.theme-dark .cm-line.HyperMD-header-4 .cm-header-4 {
+background: var(--h4-block-bg);
+padding: 0em 0.1em;
+color: color-mix(in srgb, var(--h4-text-base) var(--h4-text-level), black);
+-webkit-box-decoration-break: clone;
+box-decoration-break: clone;
+}
+
+/* H1方块(阅读模式) */
+.theme-dark .markdown-rendered h1 {
+background: var(--h1-block-bg);
+width: 100%;
+padding: 0em 0.1em;
+color: color-mix(in srgb, var(--h1-text-base) var(--h1-text-level), black);
+}
+
+/* H2方块(阅读模式) */
+.theme-dark .markdown-rendered h2 {
+background: var(--h2-block-bg);
+width: 100%;
+padding: 0em 0.1em;
+color: color-mix(in srgb, var(--h2-text-base) var(--h2-text-level), black);
+}
+
+/* H3方块(阅读模式) */
+.theme-dark .markdown-rendered h3 {
+background: var(--h3-block-bg);
+width: fit-content;
+padding: 0em 0.1em;
+color: color-mix(in srgb, var(--h3-text-base) var(--h3-text-level), black);
+}
+
+/* 实时预览 */
+.cm-line.HyperMD-header-1 { --hbar-color: var(--hbar-1); }
+.cm-line.HyperMD-header-2 { --hbar-color: var(--hbar-2); }
+.cm-line.HyperMD-header-3 { --hbar-color: var(--hbar-3); }
+.cm-line.HyperMD-header-4 { --hbar-color: var(--hbar-4); }
+.cm-line.HyperMD-header-5 { --hbar-color: var(--hbar-5); }
+.cm-line.HyperMD-header-6 { --hbar-color: var(--hbar-6); }
+
+/* 阅读模式 */
+.markdown-rendered h1 { --hbar-color: var(--hbar-1); }
+.markdown-rendered h2 { --hbar-color: var(--hbar-2); }
+.markdown-rendered h3 { --hbar-color: var(--hbar-3); }
+.markdown-rendered h4 { --hbar-color: var(--hbar-4); }
+.markdown-rendered h5 { --hbar-color: var(--hbar-5); }
+.markdown-rendered h6 { --hbar-color: var(--hbar-6); }
+
+/* 暗色模式下,有方块则屏蔽左侧色条 */
+.theme-dark .cm-line.HyperMD-header-1::before,
+.theme-dark .cm-line.HyperMD-header-2::before,
+.theme-dark .cm-line.HyperMD-header-3::before,
+.theme-dark .cm-line.HyperMD-header-4::before,
+.theme-dark .markdown-rendered h1::before,
+.theme-dark .markdown-rendered h2::before,
+.theme-dark .markdown-rendered h3::before,
+.theme-dark .markdown-rendered h4::before {
+display: none;
+}
+
+/* ======================================================================
+   色条
+   ====================================================================== */
+body {
+  --hbar-1: hsla(260, 88%, 66%, 0.85);  /* 8A5CF5 */
+  --hbar-2: hsla(360, 80%, 60%, 0.85);  /* E5484D */
+  --hbar-3: hsla(50, 100%, 50%, 0.85);
+  --hbar-4: hsla(150, 50%, 50%, 0.85);
+  --hbar-5: hsla(140, 60%, 50%, 0.66);
+  --hbar-6: hsla(360, 80%, 36%, 0.99);
+}
+
+/* 通用变量 */
+.cm-line[class*="HyperMD-header-"]::before,
+.markdown-rendered :is(h1,h2,h3,h4,h5,h6)::before {
+content: "";
+display: inline-block;
+width: 6px;
+height: 1em;
+radius: 999px;
+margin-right: 2px;
+vertical-align: -0.1em;
+background: var(--hbar-color);
+}
+
+/* 隐藏标题折叠箭头 */
+.cm-fold-indicator,
+.markdown-reading-view .collapse-indicator {
+opacity: 0;
+}
+.cm-fold-indicator:hover,
+.markdown-reading-view .collapse-indicator:hover {
+opacity: 1;
+}
+
+/* ======================================================================
+   上下留白
+   ====================================================================== */
+.markdown-source-view.mod-cm6 .HyperMD-header-2 {
+padding-top: 0.2em;
+padding-bottom: 0.05em;
+}
+
+.markdown-source-view.mod-cm6 .HyperMD-header-3 {
+padding-top: 0.2em;
+padding-bottom: 0em;
+}
+
+/* ======================================================================
+   前导符
+   ====================================================================== */
+/* -------------------- 配置区 -------------------- */
+body {
+  /* H1 */
+  --h1-leader-color: var(--h1-block-bg);
+  --h1-leader-thickness: 3px;
+  --h1-leader-gap: 0em;
+  --h1-leader-min-width: 2em;
+
+  /* H2 */
+  --h2-leader-color: var(--h2-block-bg);
+  --h2-leader-thickness: 3px;
+  --h2-leader-gap: 0em;
+  --h2-leader-min-width: 2em;
+}
+
+/* -------------------- 标题布局 -------------------- */
+/* 实时预览：不改变 CodeMirror 编辑行的 display 类型 */
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-1 {
+  display: block;
+  position: relative;
+}
+
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-2 {
+  display: block;
+  position: relative;
+}
+
+/* 阅读模式 */
+.markdown-rendered h1 {
+  display: flex;
+  align-items: center;
+}
+
+.markdown-rendered h2 {
+  display: flex;
+  align-items: center;
+}
+
+/* -------------------- 实线前导符 -------------------- */
+/* H1实时预览 */
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-1::after {
+  content: "";
+  position: absolute;
+  position-anchor: --heading-text;
+  /* 直接锚定标题文字色块底部,而非整个 .cm-line 的底部 */
+  top: anchor(bottom);
+  right: 0;
+  left: anchor(right);
+  min-width: var(--h1-leader-min-width);
+  margin-left: var(--h1-leader-gap);
+  border-top: var(--h1-leader-thickness) solid var(--h1-leader-color);
+  opacity: var(--h1-leader-opacity, 1);
+  /* 让前导符中心线与色块底边重合 */
+  transform: translateY(-100%);
+  pointer-events: none;
+}
+
+/* H2实时预览 */
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-2::after {
+  content: "";
+  position: absolute;
+  position-anchor: --heading-text-h2;
+  /* 直接锚定标题文字色块顶部,而非整个 .cm-line 的顶部 */
+  top: anchor(top);
+  right: 0;
+  left: anchor(right);
+  min-width: var(--h2-leader-min-width);
+  margin-left: var(--h2-leader-gap);
+  border-top: var(--h2-leader-thickness) solid var(--h2-leader-color);
+  opacity: var(--h2-leader-opacity, var(--h1-leader-opacity, 1));
+  /* 让前导符中心线与色块顶边重合 */
+  transform: translateY(-0%);
+  pointer-events: none;
+}
+
+/* H1阅读模式 */
+.markdown-rendered h1::after {
+  content: "";
+  flex: 1 1 auto;
+  min-width: var(--h1-leader-min-width);
+  margin-left: var(--h1-leader-gap);
+  border-top: var(--h1-leader-thickness) solid var(--h1-leader-color);
+  opacity: var(--h1-leader-opacity, 1);
+}
+
+/* H2阅读模式 */
+.markdown-rendered h2::after {
+  content: "";
+  flex: 1 1 auto;
+  min-width: var(--h2-leader-min-width);
+  margin-left: var(--h2-leader-gap);
+  border-top: var(--h2-leader-thickness) solid var(--h2-leader-color);
+  opacity: var(--h2-leader-opacity, var(--h1-leader-opacity, 1));
+}
+
+/* ========== 锚点 ========== */
+/* 为实时预览的右侧装饰提供文字末尾及上下边缘锚点 */
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-1 .cm-header-1 {
+  anchor-name: --heading-text;
+}
+
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-2 .cm-header-2 {
+  anchor-name: --heading-text-h2;
+}
